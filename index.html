@@ -4,14 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="theme-color" content="#111622">
-  <title>PixelLab Shorts Studio Ultra</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700;900&family=Impact&family=League+Spartan:wght@800;900&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Poppins:wght@800;900&family=Roboto+Condensed:wght@700;900&family=Rubik:wght@800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+  <title>PixelLab Shorts Studio Pro</title>
+  <!-- Roboto, Montserrat, Poppins, Oswald ইত্যাদি ক্লিন ফন্ট -->
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;600;800;900&family=Montserrat:wght@400;600;800;900&family=Oswald:wght@600;700&family=Poppins:wght@400;600;800&family=Roboto+Condensed:wght@700&family=Roboto+Slab:wght@700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Montserrat', sans-serif;
+      font-family: 'Roboto', sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
@@ -32,8 +33,8 @@
 
     /* ১. টপ বার */
     .top-bar {
-      height: 44px;
-      min-height: 44px;
+      height: 46px;
+      min-height: 46px;
       background: #141b27;
       display: flex;
       align-items: center;
@@ -61,15 +62,17 @@
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
     .btn-install {
-      background: #22c55e;
-      color: #041a0e;
+      background: #0ea5e9;
+      color: #fff;
       font-size: 10px;
       font-weight: 900;
-      padding: 5px 10px;
+      padding: 5px 9px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
-      display: none; /* ডিফল্ট হাইড */
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
     .btn-export {
       background: #10b981;
@@ -218,19 +221,19 @@
     #cropModal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.92);
+      background: rgba(0,0,0,0.95);
       display: none;
       flex-direction: column;
       z-index: 150;
-      padding: 10px;
+      padding: 8px;
     }
     .crop-topbar {
-      height: 40px;
+      height: 42px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #2a374f;
-      padding: 0 8px;
+      padding: 0 4px;
       color: #38bdf8;
       font-size: 12px;
       font-weight: 900;
@@ -242,12 +245,13 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      margin: 10px 0;
+      margin: 8px 0;
+      touch-action: none;
     }
     #cropCanvas {
       max-width: 100%;
       max-height: 100%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      box-shadow: 0 0 25px rgba(0,0,0,0.9);
       touch-action: none;
     }
     .crop-bottombar {
@@ -277,6 +281,7 @@
 <body>
 
   <div class="app-root">
+    <!-- টপবার -->
     <div class="top-bar">
       <div class="top-icons">
         <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
@@ -284,22 +289,24 @@
           ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
         </label>
         <button class="top-btn" onclick="deleteImage()" title="Delete Image">🗑️</button>
-        <button class="top-btn" onclick="restoreOriginalImage()" title="Restore/Reset">↺</button>
+        <button class="top-btn" onclick="restoreOriginalImage()" title="Restore">↺</button>
         <button class="top-btn" id="btnCompare" title="Before/After Compare">👁️</button>
       </div>
       <div class="top-icons">
-        <button class="btn-install" id="pwaInstallBtn" onclick="installAppDirect()">📲 INSTALL APP</button>
-        <button class="top-btn" onclick="downloadTransparentPNG()" title="Download Transparent PNG">📥 PNG</button>
+        <button class="btn-install" onclick="showInstallHelp()">📲 INSTALL</button>
+        <button class="top-btn" onclick="downloadTransparentPNG()" title="Transparent PNG">📥 PNG</button>
         <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
       </div>
     </div>
 
+    <!-- ক্যানভাস ওয়ার্কস্পেস -->
     <div class="workspace">
       <div class="canvas-container" id="canvasBox">
         <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
       </div>
     </div>
 
+    <!-- বটম কন্ট্রোল প্যানেল -->
     <div class="bottom-panel">
       <div class="sub-tools" id="subToolsBar"></div>
       <div class="main-tabs">
@@ -313,10 +320,11 @@
     </div>
   </div>
 
+  <!-- টেক্সট মডাল -->
   <div class="modal-overlay" id="textModal">
     <div class="modal-card">
-      <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (AUTO SAVED)</span>
-      <textarea id="modalScriptInput">In 1988, Dave Grohl was broke, sleeping on floors in Virginia and playing drums for bands that barely paid. Tommy drove him to 86 gigs in an old truck with a cracked windshield. In 2011, Grohl bought back the truck and gave Tommy a $28,000 cheque.</textarea>
+      <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (CASE PRESERVED)</span>
+      <textarea id="modalScriptInput">Jamie Lee Curtis had a secret. For 10 years she was addicted to painkillers. She stole from friends. She forged prescriptions. She hid bottles in her car. In her purse. In her closet. Nobody suspected. Not her famous husband. Not her children. Nobody. Then a friend offered her a pill. She opened her mouth. She had said yes a thousand times before. This time she said no. She couldn't believe she'd said it. "My secret was only as sick as I was," she said. She told her husband that night. She entered rehab the next day. One word changed everything. Subscribe ❤️ if you believe one brave decision can change a life.</textarea>
       <div style="display:flex; justify-content:flex-end; gap:8px;">
         <button onclick="closeTextEditor(false)" style="padding:6px 12px; background:#334155; border:none; border-radius:6px; color:#fff; font-size:11px;">Cancel</button>
         <button onclick="closeTextEditor(true)" style="padding:6px 12px; background:#0ea5e9; border:none; border-radius:6px; color:#fff; font-size:11px;">Done</button>
@@ -324,24 +332,23 @@
     </div>
   </div>
 
+  <!-- কাস্টম ক্রপ স্টুডিও পপআপ -->
   <div id="cropModal">
     <div class="crop-topbar">
-      <span>✂️ CROP STUDIO</span>
+      <span>✂️ CROP & CUT OUT TEXT (DRAG BOX)</span>
       <div style="display:flex; gap:6px;">
-        <button onclick="closeCropModal(false)" style="padding:4px 10px; background:#334155; color:#fff; border:none; border-radius:4px; font-size:10px;">CANCEL</button>
-        <button onclick="closeCropModal(true)" style="padding:4px 12px; background:#22c55e; color:#000; border:none; border-radius:4px; font-weight:bold; font-size:10px;">APPLY</button>
+        <button onclick="closeCropModal(false)" style="padding:5px 10px; background:#334155; color:#fff; border:none; border-radius:4px; font-size:10px;">CANCEL</button>
+        <button onclick="closeCropModal(true)" style="padding:5px 14px; background:#22c55e; color:#000; border:none; border-radius:4px; font-weight:bold; font-size:10px;">APPLY CROP</button>
       </div>
     </div>
     <div class="crop-workspace">
       <canvas id="cropCanvas"></canvas>
     </div>
     <div class="crop-bottombar">
-      <button class="crop-pill active" onclick="setCropAspect('free', this)">Free-Hand Box</button>
-      <button class="crop-pill" onclick="setCropAspect('9:16', this)">9:16 Shorts</button>
+      <button class="crop-pill active" onclick="setCropAspect('free', this)">Free-Hand Box (ইচ্ছামতো)</button>
+      <button class="crop-pill" onclick="setCropAspect('head', this)">Top Half Only (নিচের টেক্সট বাদ)</button>
       <button class="crop-pill" onclick="setCropAspect('1:1', this)">1:1 Square</button>
-      <button class="crop-pill" onclick="setCropAspect('4:5', this)">4:5 Portrait</button>
-      <button class="crop-pill" onclick="setCropAspect('16:9', this)">16:9 Wide</button>
-      <button class="crop-pill" onclick="setCropAspect('3:4', this)">3:4 Document</button>
+      <button class="crop-pill" onclick="setCropAspect('9:16', this)">9:16 Full Shorts</button>
     </div>
   </div>
 
@@ -361,10 +368,11 @@
     };
 
     let textState = {
-      x: 50, y: 920, w: 980, h: 900,
-      fontSize: 32, stroke: 10,
-      font: "'Montserrat', sans-serif",
-      align: 'left', case: 'uppercase',
+      x: 40, y: 840, w: 1000, h: 980,
+      fontSize: 28, stroke: 10,
+      font: "'Roboto', sans-serif",
+      align: 'left',
+      caseMode: 'original', // 'original' (বড়-ছোট যেমন লিখবেন), 'upper', 'sentence'
       colorDefault: '#FFFFFF', colorNum: '#FFEA00', colorName: '#38BDF8',
       rawText: document.getElementById('modalScriptInput').value
     };
@@ -372,40 +380,23 @@
     let motionState = { type: 'zoomIn', duration: 10 };
     let activeSelection = 'text';
 
-    // ১. স্মার্ট অ্যাপ ইনস্টল চেক (ইনস্টল থাকলে বাটন আর শো করবে না)
+    // ১. অ্যাপ ইনস্টলেশন গাইড (Chrome ব্রাউজার ডিটেকশন)
     let deferredPrompt = null;
-    const pwaBtn = document.getElementById('pwaInstallBtn');
-
-    function checkStandaloneMode() {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      if (isStandalone) {
-        pwaBtn.style.display = 'none'; // অ্যাপে ঢুকলে বাটন থাকবে না
-      }
-    }
-    checkStandaloneMode();
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      if (!isStandalone) {
-        pwaBtn.style.display = 'block'; // শুধু ব্রাউজারে থাকলে শো করবে
-      }
     });
 
-    function installAppDirect() {
+    function showInstallHelp() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((res) => {
-          if (res.outcome === 'accepted') {
-            pwaBtn.style.display = 'none';
-          }
-          deferredPrompt = null;
-        });
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        alert("📲 অ্যাপ হিসেবে ইনস্টল করার নিয়ম:\n\n১. লিংকটি মেসেঞ্জার/ফেসবুক ব্রাউজারে থাকলে উপরে থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. ক্রোম ব্রাউজারের থ্রি-ডট (⋮) মেনু থেকে 'Add to Home screen' বা 'Install app' চাপুন।");
       }
     }
 
-    // ২. অটো-সেভ ও মেমোরি রিস্টোর
+    // ২. অটো-সেভ স্টেট
     function saveProjectState() {
       const stateToSave = {
         imgState: imgState,
@@ -413,11 +404,11 @@
         motionState: motionState,
         currentTab: currentTab
       };
-      localStorage.setItem('pixelLabStudioState', JSON.stringify(stateToSave));
+      localStorage.setItem('pixelLabStudioState_v2', JSON.stringify(stateToSave));
     }
 
     function loadProjectState() {
-      const saved = localStorage.getItem('pixelLabStudioState');
+      const saved = localStorage.getItem('pixelLabStudioState_v2');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -428,7 +419,7 @@
           document.getElementById('modalScriptInput').value = textState.rawText;
         } catch(e) {}
       }
-      const savedImgData = localStorage.getItem('pixelLabSavedImg');
+      const savedImgData = localStorage.getItem('pixelLabSavedImg_v2');
       if (savedImgData) {
         const img = new Image();
         img.onload = () => {
@@ -440,13 +431,19 @@
       }
     }
 
-    // ৩. সাব-টুলস রেন্ডারিং
+    // ৩. সাব-টুলস মেনু (Roboto ও কাস্টম ফন্ট ও কেস সহ)
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
         bar.innerHTML = `
           <div class="tool-item"><label>SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw(); saveProjectState();"></div>
           <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>TEXT CASE</label>
+            <select onchange="textState.caseMode=this.value; draw(); saveProjectState();">
+              <option value="original" ${textState.caseMode==='original'?'selected':''}>Normal (বড়-ছোট)</option>
+              <option value="upper" ${textState.caseMode==='upper'?'selected':''}>ALL CAPS (বড়)</option>
+            </select>
+          </div>
           <div class="tool-item"><label>ALIGN</label>
             <select onchange="textState.align=this.value; draw(); saveProjectState();">
               <option value="left" ${textState.align==='left'?'selected':''}>Left</option>
@@ -465,7 +462,7 @@
       } else if (currentTab === 'crop') {
         bar.innerHTML = `
           <div class="tool-item"><label>CROP TOOL</label>
-            <button onclick="openCropModal()" style="padding:4px 8px; background:#0ea5e9; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold;">✂️ OPEN CROP BOX</button>
+            <button onclick="openCropModal()" style="padding:4px 10px; background:#0ea5e9; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold;">✂️ OPEN CROP BOX</button>
           </div>
           <div class="tool-item"><label>MASK EFFECT</label>
             <select onchange="imgState.mask=this.value; draw(); saveProjectState();">
@@ -480,7 +477,7 @@
         bar.innerHTML = `
           <div class="tool-item"><label>SMART FILTER</label>
             <select onchange="imgState.filter=this.value; draw(); saveProjectState();">
-              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR</option>
+              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR (Auto-Enhance)</option>
               <option value="warm" ${imgState.filter==='warm'?'selected':''}>Warm Glow</option>
               <option value="cool" ${imgState.filter==='cool'?'selected':''}>Cool Blue</option>
               <option value="cyber" ${imgState.filter==='cyber'?'selected':''}>Cyberpunk</option>
@@ -491,18 +488,17 @@
         `;
       } else if (currentTab === 'font') {
         bar.innerHTML = `
-          <div class="tool-item"><label>FONT FAMILY</label>
+          <div class="tool-item"><label>FONT SELECTION (ROBOTO & MORE)</label>
             <select onchange="textState.font=this.value; draw(); saveProjectState();">
-              <option value="'Montserrat', sans-serif">Montserrat Black</option>
-              <option value="'Anton', sans-serif">Anton</option>
-              <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
-              <option value="'League Spartan', sans-serif">Spartan</option>
-              <option value="'Poppins', sans-serif">Poppins</option>
+              <option value="'Roboto', sans-serif">Roboto Clean (Standard)</option>
+              <option value="'Roboto Slab', serif">Roboto Slab Bold</option>
+              <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
+              <option value="'Inter', sans-serif">Inter Pro</option>
+              <option value="'Poppins', sans-serif">Poppins Modern</option>
+              <option value="'Montserrat', sans-serif">Montserrat</option>
               <option value="'Oswald', sans-serif">Oswald</option>
-              <option value="'Cinzel', serif">Cinzel</option>
-              <option value="'Impact', sans-serif">Impact</option>
-              <option value="'Teko', sans-serif">Teko</option>
-              <option value="'Rubik', sans-serif">Rubik</option>
+              <option value="'Anton', sans-serif">Anton Impact</option>
+              <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
             </select>
           </div>
         `;
@@ -537,7 +533,7 @@
       saveProjectState();
     }
 
-    // ইমেজ আপলোড
+    // ইমেজ আপলোড ও অটো-এনহ্যান্স
     document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -550,10 +546,10 @@
             imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
             imgState.cropX = 0; imgState.cropY = 0;
             imgState.cropW = img.width; imgState.cropH = img.height;
-            switchTab('image');
+            switchTab('crop');
             draw();
             saveProjectState();
-            try { localStorage.setItem('pixelLabSavedImg', evt.target.result); } catch(err){}
+            try { localStorage.setItem('pixelLabSavedImg_v2', evt.target.result); } catch(err){}
           };
           img.src = evt.target.result;
         };
@@ -561,11 +557,11 @@
       }
     });
 
-    // ৪. কাস্টম ও বক্স ক্রপ ইঞ্জিন (Interactive Crop Studio)
+    // ৪. কাস্টম ক্রপ ইঞ্জিন (স্ক্রিনশটের নিচের টেক্সট বাদ দেওয়ার টুল)
     const cropModal = document.getElementById('cropModal');
     const cropCanvas = document.getElementById('cropCanvas');
     const cropCtx = cropCanvas.getContext('2d');
-    let cropBox = { x: 50, y: 50, w: 200, h: 200 };
+    let cropBox = { x: 0, y: 0, w: 200, h: 200 };
     let cropRatioMode = 'free';
     let isDraggingCrop = false;
     let isResizingCrop = false;
@@ -574,7 +570,7 @@
 
     function openCropModal() {
       if (!originalImg) {
-        alert("অনুগ্রহ করে আগে একটি ছবি আপলোড করুন!");
+        alert("অনুগ্রহ করে ➕ বাটন চেপে একটি ছবি দিন!");
         return;
       }
       cropModal.style.display = 'flex';
@@ -582,8 +578,8 @@
     }
 
     function setupCropCanvas() {
-      const maxW = window.innerWidth - 30;
-      const maxH = window.innerHeight - 130;
+      const maxW = window.innerWidth - 20;
+      const maxH = window.innerHeight - 120;
       let w = originalImg.width;
       let h = originalImg.height;
 
@@ -592,11 +588,12 @@
       cropCanvas.height = h * scale;
       cropCanvasScale = scale;
 
+      // ডিফল্টভাবে উপরের অর্ধেক সিলেক্ট থাকবে যাতে নিচের লেখা বাদ যায়
       cropBox = {
-        x: (cropCanvas.width * 0.1),
-        y: (cropCanvas.height * 0.1),
-        w: (cropCanvas.width * 0.8),
-        h: (cropCanvas.height * 0.8)
+        x: 0,
+        y: 0,
+        w: cropCanvas.width,
+        h: cropCanvas.height * 0.55 // নিচের টেক্সট ছাড়া শুধু চেহারা
       };
       drawCropView();
     }
@@ -609,24 +606,16 @@
       let w = cropCanvas.width;
       let h = cropCanvas.height;
 
-      if (aspect === '9:16') {
-        let cw = Math.min(w * 0.8, (h * 0.8) * (9/16));
-        cropBox.w = cw; cropBox.h = cw * (16/9);
+      if (aspect === 'head') {
+        // শুধু উপরের ছবি, নিচের টেক্সট স্বয়ংক্রিয় বাদ
+        cropBox = { x: 0, y: 0, w: w, h: h * 0.52 };
       } else if (aspect === '1:1') {
-        let s = Math.min(w * 0.8, h * 0.8);
-        cropBox.w = s; cropBox.h = s;
-      } else if (aspect === '4:5') {
-        let cw = Math.min(w * 0.8, (h * 0.8) * (4/5));
-        cropBox.w = cw; cropBox.h = cw * (5/4);
-      } else if (aspect === '16:9') {
-        let ch = Math.min(h * 0.8, (w * 0.8) * (9/16));
-        cropBox.w = ch * (16/9); cropBox.h = ch;
-      } else if (aspect === '3:4') {
-        let cw = Math.min(w * 0.8, (h * 0.8) * (3/4));
-        cropBox.w = cw; cropBox.h = cw * (4/3);
+        let s = Math.min(w, h);
+        cropBox = { x: (w-s)/2, y: 0, w: s, h: s };
+      } else if (aspect === '9:16') {
+        let cw = Math.min(w, h * (9/16));
+        cropBox = { x: (w-cw)/2, y: 0, w: cw, h: cw * (16/9) };
       }
-      cropBox.x = (w - cropBox.w) / 2;
-      cropBox.y = (h - cropBox.h) / 2;
       drawCropView();
     }
 
@@ -634,40 +623,35 @@
       cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       cropCtx.drawImage(originalImg, 0, 0, cropCanvas.width, cropCanvas.height);
 
-      // ডার্কেন বাইরে
-      cropCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+      // বাইরে অন্ধকার করা
+      cropCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
 
-      // ক্রপ এলাকার ভেতর ক্লিয়ার
+      // ক্রপ এলাকার ভেতর একদম পরিষ্কার রাখা
       cropCtx.clearRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
       cropCtx.drawImage(originalImg, 
         cropBox.x / cropCanvasScale, cropBox.y / cropCanvasScale, cropBox.w / cropCanvasScale, cropBox.h / cropCanvasScale,
         cropBox.x, cropBox.y, cropBox.w, cropBox.h
       );
 
-      // ক্রপ বাউন্ডারি ও হ্যান্ডেল
+      // বর্ডার
       cropCtx.strokeStyle = '#38bdf8';
       cropCtx.lineWidth = 2;
       cropCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
 
-      // ৪ কোণায় হ্যান্ডেল
+      // কোণায় হ্যান্ডেল
       cropCtx.fillStyle = '#38bdf8';
-      const sz = 12;
-      cropCtx.fillRect(cropBox.x - sz/2, cropBox.y - sz/2, sz, sz);
-      cropCtx.fillRect(cropBox.x + cropBox.w - sz/2, cropBox.y - sz/2, sz, sz);
-      cropCtx.fillRect(cropBox.x - sz/2, cropBox.y + cropBox.h - sz/2, sz, sz);
-      cropCtx.fillRect(cropBox.x + cropBox.w - sz/2, cropBox.y + cropBox.h - sz/2, sz, sz);
+      const sz = 16;
+      cropCtx.fillRect(cropBox.x + cropBox.w - sz, cropBox.y + cropBox.h - sz, sz, sz);
     }
 
-    // ক্রপ টাচ হ্যান্ডলার
     cropCanvas.addEventListener('pointerdown', (e) => {
       const rect = cropCanvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       cropTouchStart = { x, y };
 
-      // নিচের ডান কোণা চেক (Resize)
-      if (Math.hypot(x - (cropBox.x + cropBox.w), y - (cropBox.y + cropBox.h)) < 30) {
+      if (Math.hypot(x - (cropBox.x + cropBox.w), y - (cropBox.y + cropBox.h)) < 40) {
         isResizingCrop = true;
       } else if (x >= cropBox.x && x <= cropBox.x + cropBox.w && y >= cropBox.y && y <= cropBox.y + cropBox.h) {
         isDraggingCrop = true;
@@ -686,13 +670,8 @@
         cropBox.x = Math.max(0, Math.min(cropCanvas.width - cropBox.w, cropBox.x + dx));
         cropBox.y = Math.max(0, Math.min(cropCanvas.height - cropBox.h, cropBox.y + dy));
       } else if (isResizingCrop) {
-        cropBox.w = Math.max(50, Math.min(cropCanvas.width - cropBox.x, cropBox.w + dx));
-        if (cropRatioMode === 'free') {
-          cropBox.h = Math.max(50, Math.min(cropCanvas.height - cropBox.y, cropBox.h + dy));
-        } else {
-          const ratio = cropBox.w / (cropBox.w - dx);
-          cropBox.h = cropBox.h * ratio;
-        }
+        cropBox.w = Math.max(60, Math.min(cropCanvas.width - cropBox.x, cropBox.w + dx));
+        cropBox.h = Math.max(60, Math.min(cropCanvas.height - cropBox.y, cropBox.h + dy));
       }
       cropTouchStart = { x, y };
       drawCropView();
@@ -717,7 +696,7 @@
 
     function deleteImage() {
       loadedImg = null; originalImg = null;
-      localStorage.removeItem('pixelLabSavedImg');
+      localStorage.removeItem('pixelLabSavedImg_v2');
       draw();
       saveProjectState();
     }
@@ -790,7 +769,6 @@
       isPinching = false;
     });
 
-    // টেক্সট এডিটর
     function openTextEditor() {
       document.getElementById('modalScriptInput').value = textState.rawText;
       document.getElementById('textModal').style.display = 'flex';
@@ -804,16 +782,18 @@
       document.getElementById('textModal').style.display = 'none';
     }
 
+    // স্মার্ট কালার ও কেস পার্সিং
     function parseStoryWords(text) {
-      const isUpper = textState.case === 'uppercase';
-      let cleanText = isUpper ? text.toUpperCase() : text;
+      let cleanText = text;
+      if (textState.caseMode === 'upper') cleanText = text.toUpperCase();
+
       const words = cleanText.trim().split(/\s+/);
-      const ignore = ['THE','AND','FOR','WAS','HIS','HER','WITH','FROM','THAT','THEN','WHEN','THEY','THIS','INTO','OVER'];
+      const ignore = ['The','And','For','Was','His','Her','With','From','That','Then','When','They','This','Into','Over'];
       return words.map(w => {
         let clean = w.replace(/[^a-zA-Z0-9$]/g, '');
         let col = textState.colorDefault;
         if (/(\$|\b\d+[\d,]*\b)/.test(clean)) col = textState.colorNum;
-        else if (clean.length > 2 && !ignore.includes(clean.toUpperCase()) && /^[A-Z]/.test(clean)) col = textState.colorName;
+        else if (clean.length > 2 && !ignore.includes(clean) && /^[A-Z]/.test(clean)) col = textState.colorName;
         return { text: w, color: col };
       });
     }
@@ -821,8 +801,8 @@
     function getFilterCSS() {
       if (showBeforeComparison) return 'none';
       switch (imgState.filter) {
-        case 'hdr': return 'contrast(130%) saturate(140%) brightness(105%)';
-        case 'warm': return 'sepia(30%) saturate(140%) contrast(115%) brightness(105%)';
+        case 'hdr': return 'contrast(135%) saturate(145%) brightness(106%)';
+        case 'warm': return 'sepia(25%) saturate(135%) contrast(115%)';
         case 'cool': return 'hue-rotate(185deg) contrast(120%) saturate(120%)';
         case 'cyber': return 'hue-rotate(305deg) contrast(140%) saturate(160%)';
         case 'bw': return 'grayscale(100%) contrast(150%) brightness(95%)';
@@ -833,16 +813,16 @@
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ১. ইমেজ ড্রয়িং
+      // ১. ক্রপ করা ইমেজ আল্ট্রা ক্লিয়ারিটি সহ আঁকা
       if (loadedImg) {
         ctx.save();
         if (imgState.mask === 'circle') {
           ctx.beginPath();
-          ctx.arc(canvas.width / 2, 480, 380, 0, Math.PI * 2);
+          ctx.arc(canvas.width / 2, 450, 380, 0, Math.PI * 2);
           ctx.clip();
         } else if (imgState.mask === 'rounded') {
           ctx.beginPath();
-          ctx.roundRect(60, 80, canvas.width - 120, 800, 40);
+          ctx.roundRect(50, 60, canvas.width - 100, 800, 40);
           ctx.clip();
         }
 
@@ -859,9 +839,9 @@
 
         if (imgState.mask === 'fadeBottom') {
           let fade = ctx.createLinearGradient(0, 0, 0, canvas.height);
-          fade.addColorStop(0, 'rgba(0,0,0,0.2)');
+          fade.addColorStop(0, 'rgba(0,0,0,0.15)');
           fade.addColorStop(0.45, 'rgba(0,0,0,0.02)');
-          fade.addColorStop(0.7, 'rgba(9,12,19,0.85)');
+          fade.addColorStop(0.68, 'rgba(9,12,19,0.85)');
           fade.addColorStop(1, 'rgba(9,12,19,1)');
           ctx.fillStyle = fade;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -869,7 +849,7 @@
       }
 
       // ২. টেক্সট প্লেট
-      ctx.fillStyle = 'rgba(11, 17, 32, 0.78)';
+      ctx.fillStyle = 'rgba(11, 17, 32, 0.82)';
       ctx.beginPath();
       ctx.roundRect(textState.x, textState.y, textState.w, textState.h, 24);
       ctx.fill();
@@ -877,17 +857,17 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // ৩. টেক্সট ড্রয়িং
+      // ৩. টেক্সট ড্রয়িং (বড়-ছোট অক্ষরের সাপোর্ট সহ)
       const fSize = textState.fontSize;
       const sWidth = textState.stroke;
       const words = parseStoryWords(textState.rawText);
 
-      ctx.font = `900 ${fSize}px ${textState.font}`;
+      ctx.font = `700 ${fSize}px ${textState.font}`;
       ctx.textBaseline = 'top';
 
       const padX = 35;
       const maxW = textState.w - (padX * 2);
-      const lineH = fSize * 1.5;
+      const lineH = fSize * 1.45;
 
       let lines = [], curLine = [], curLineWidth = 0;
       words.forEach(item => {
@@ -904,9 +884,9 @@
       });
       if (curLine.length > 0) lines.push(curLine);
 
-      let curY = textState.y + 30;
+      let curY = textState.y + 25;
       lines.forEach(line => {
-        if (curY + lineH > textState.y + textState.h - 20) return;
+        if (curY + lineH > textState.y + textState.h - 15) return;
         const lineTotalW = line.reduce((sum, item) => sum + ctx.measureText(item.text + ' ').width, 0);
         let curX = textState.x + padX;
         if (textState.align === 'center') curX = textState.x + (textState.w - lineTotalW) / 2;
@@ -922,7 +902,7 @@
             ctx.strokeText(wStr, curX, curY);
           }
           ctx.shadowColor = 'rgba(0,0,0,0.95)';
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 8;
           ctx.fillStyle = item.color;
           ctx.fillText(wStr, curX, curY);
           curX += wWidth;
@@ -951,7 +931,7 @@
 
     async function renderMotionVideo() {
       if (!loadedImg) {
-        alert("অনুগ্রহ করে ➕ চেপে ছবি আপলোড করুন!");
+        alert("অনুগ্রহ করে ➕ চেপে ছবি দিন!");
         return;
       }
       const btn = document.getElementById('renderBtn');
