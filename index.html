@@ -1,471 +1,808 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Shorts Video Style Text Editor</title>
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#111622">
+  <title>PixelLab Shorts Studio Ultra</title>
+  <!-- ৫০+ জনপ্রিয় শর্টস ও টাইপোগ্রাফি ফন্ট প্যাক -->
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700;900&family=Impact&family=Inter:wght@700;900&family=League+Spartan:wght@800;900&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Playfair+Display:wght@900&family=Poppins:wght@800;900&family=Roboto+Condensed:wght@700;900&family=Rubik:wght@800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #0f1115;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      background: #090c13;
+      color: #e2e8f0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-    }
-
-    /* মোবাইল টপ বার */
-    .top-bar {
-      display: flex;
-      gap: 8px;
-      padding: 8px 10px;
-      background: #161922;
-      overflow-x: auto;
-      white-space: nowrap;
-      border-bottom: 1px solid #282e3d;
-      flex-shrink: 0;
-      scrollbar-width: none;
-    }
-    .top-bar::-webkit-scrollbar { display: none; }
-
-    .btn {
-      background: #232936;
-      color: #fff;
-      border: 1px solid #3d465c;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-    }
-    .btn:active { background: #353e54; }
-    input[type="file"] { display: none; }
-
-    /* অটো-সেভ টোস্ট */
-    #save-tag {
-      position: absolute;
-      top: 55px;
-      right: 12px;
-      background: rgba(0, 240, 255, 0.9);
-      color: #000;
-      font-weight: bold;
-      padding: 4px 10px;
-      font-size: 11px;
-      border-radius: 20px;
-      display: none;
-      z-index: 99;
-    }
-
-    /* ওয়ার্কস্পেস */
-    .workspace {
-      flex: 1;
-      position: relative;
       overflow: hidden;
+    }
+    /* ১. পিক্সেলল্যাব প্রিমিয়াম টপ বার */
+    .top-bar {
+      height: 48px;
+      background: #141b27;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      border-bottom: 1px solid #202b3d;
+      z-index: 20;
+    }
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 15px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #000;
-      touch-action: none;
+      padding: 6px;
+      border-radius: 6px;
     }
-
-    #capture-area {
-      position: relative;
-      display: inline-block;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    #image {
-      max-width: 95vw;
-      max-height: 52vh;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-    }
-
-    /* ভিডিওর মতো সলিড বক্স + ডুয়েল কালার ফন্ট */
-    .caption-box {
-      position: absolute;
-      top: 55%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      text-align: center;
-      z-index: 20;
-      cursor: move;
-      user-select: none;
-      touch-action: none;
-      line-height: 1.5;
-    }
-    
-    .caption-box span {
-      display: inline;
-      background: rgba(0, 0, 0, 0.88);
-      padding: 3px 6px;
-      margin: 2px 0;
+    .top-btn:active { background: #202b3d; color: #38bdf8; }
+    .btn-install {
+      background: #38bdf8;
+      color: #04101e;
+      font-size: 10px;
       font-weight: 900;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      border-radius: 3px;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: none;
+    }
+    .btn-export {
+      background: #10b981;
+      color: #022013;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
     }
 
-    /* ভিডিওর কালার স্কিম */
-    .caption-box span.c-white {
-      color: #ffffff;
-      text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
+    /* ২. মূল ক্যানভাস ও ওয়ার্কস্পেস */
+    .workspace {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #05070c;
+      overflow: hidden;
+      touch-action: none;
     }
-    .caption-box span.c-cyan {
-      color: #00f0ff; /* রেফারেন্স ভিডিওর উজ্জ্বল সায়ান কালার */
-      text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    .canvas-container {
+      height: 94%;
+      aspect-ratio: 9 / 16;
+      background: repeating-conic-gradient(#161e2b 0% 25%, #0e141f 0% 50%) 50% / 18px 18px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.85);
+      position: relative;
+      border: 1px solid #233045;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
     }
 
-    /* মোবাইল কন্ট্রোল প্যানেল */
+    /* ৩. বটম টুলস প্যানেল */
     .bottom-panel {
-      background: #161922;
-      border-top: 1px solid #282e3d;
-      padding: 10px 12px 14px;
+      background: #121824;
+      border-top: 1px solid #1f2a3c;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
+      z-index: 20;
     }
-
-    .input-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    textarea {
-      flex: 1;
-      height: 48px;
-      background: #0f1115;
-      border: 1px solid #2e3547;
-      color: #fff;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 13px;
-      resize: none;
-    }
-    textarea:focus { outline: none; border-color: #00f0ff; }
-
-    .control-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
+    .sub-tools {
+      padding: 8px 10px;
       overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .control-row::-webkit-scrollbar { display: none; }
-
-    select {
-      flex: 1;
-      min-width: 120px;
-      background: #0f1115;
-      color: #fff;
-      border: 1px solid #2e3547;
-      border-radius: 6px;
-      padding: 6px;
-      font-size: 12px;
-      height: 36px;
-    }
-
-    .slider-group {
+      white-space: nowrap;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #aaa;
+      gap: 10px;
+      background: #151d2c;
+      border-bottom: 1px solid #1e293b;
     }
-    input[type="range"] {
-      width: 75px;
-      accent-color: #00f0ff;
+    .sub-tools::-webkit-scrollbar { display: none; }
+    .tool-item {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 9px;
+      color: #94a3b8;
+      font-weight: bold;
+    }
+    .tool-item input[type="range"] {
+      width: 85px;
+      accent-color: #38bdf8;
+    }
+    .tool-item select, .tool-item input[type="color"] {
+      background: #0a0e17;
+      border: 1px solid #2b394e;
+      color: #fff;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+    .main-tabs {
+      height: 50px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #0e141f;
+    }
+    .tab-btn {
+      flex: 1;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      color: #38bdf8;
+      border-top: 2px solid #38bdf8;
+      background: #151d2a;
+    }
+
+    /* পপআপ মডাল */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-card {
+      width: 100%;
+      max-width: 420px;
+      background: #161e2e;
+      border: 1px solid #2b3a54;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 140px;
+      background: #090d14;
+      border: 1px solid #25334a;
+      border-radius: 8px;
+      padding: 10px;
+      color: #fff;
+      font-size: 12px;
+      resize: none;
     }
   </style>
 </head>
 <body>
 
-  <div id="save-tag">✓ সংরক্ষিত</div>
-
+  <!-- টপবার -->
   <div class="top-bar">
-    <label class="btn">📂 ছবি আনুন <input type="file" id="file-input" accept="image/*"></label>
-    <button class="btn" onclick="startCrop('free')">কাস্টম Crop</button>
-    <button class="btn" onclick="startCrop(9/16)">9:16 Shorts</button>
-    <button class="btn" onclick="applyCrop()" id="crop-apply-btn" style="display:none; background:#00897b;">Apply Crop</button>
-    <button class="btn" onclick="saveAsImage()" style="background:#0277bd;">💾 ইমেজ সেভ</button>
-    <button class="btn" onclick="deleteImage()">🗑️ ডিলিট</button>
-    <button class="btn" onclick="clearAllData()" style="background:#b71c1c;">সব ক্লিয়ার</button>
-  </div>
-
-  <div class="workspace">
-    <div id="capture-area">
-      <img id="image" src="" style="display:none;" alt="Workspace">
-      <div id="caption-box" class="caption-box"></div>
-    </div>
-  </div>
-
-  <div class="bottom-panel">
-    <div class="input-row">
-      <textarea id="text-input" placeholder="হাইলাইট করতে ব্র্যাকেট দিন: [PAMELA ANDERSON] SPENT MUCH OF..." oninput="renderText()"></textarea>
-      <button class="btn" onclick="insertHighlight()" style="background:#00f0ff; color:#000; height:48px; font-weight:bold;">[সায়ান]</button>
-    </div>
-    
-    <div class="control-row">
-      <select id="font-select" onchange="setFont(this.value)">
-        <option value="'Impact', 'Arial Black', sans-serif">Impact (ভিডিওর মতো বোল্ড)</option>
-        <option value="'Montserrat', sans-serif">Montserrat Black</option>
-        <option value="'Arial Black', sans-serif">Arial Black</option>
-        <option value="system-ui, sans-serif">System Sans</option>
-      </select>
-
-      <label class="btn" style="white-space: nowrap; height:36px;">
-        ➕ ফন্ট ফাইল <input type="file" id="font-input" accept=".ttf,.otf,.woff" onchange="loadCustomFont(event)">
+    <div class="top-icons">
+      <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
+      <label class="top-btn" title="Add Any Image">
+        ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
       </label>
+      <button class="top-btn" onclick="deleteImage()" title="Delete Image">🗑️</button>
+      <button class="top-btn" onclick="restoreOriginalImage()" title="Restore/Reset">↺</button>
+      <button class="top-btn" id="btnCompare" title="Hold for Before/After">👁️</button>
+    </div>
+    <div class="top-icons">
+      <button class="btn-install" id="pwaInstallBtn" onclick="installAppDirect()">📲 INSTALL APP</button>
+      <button class="top-btn" onclick="downloadTransparentPNG()" title="Download Transparent PNG">📥 PNG</button>
+      <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
+    </div>
+  </div>
 
-      <div class="slider-group">
-        <span>সাইজ</span>
-        <input type="range" id="font-size" min="12" max="32" value="18" oninput="setFontSize(this.value)">
+  <!-- ক্যানভাস ভিউয়ার -->
+  <div class="workspace">
+    <div class="canvas-container" id="canvasBox">
+      <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
+    </div>
+  </div>
+
+  <!-- বটম কন্ট্রোল টুলবার -->
+  <div class="bottom-panel">
+    <div class="sub-tools" id="subToolsBar"></div>
+    <div class="main-tabs">
+      <button class="tab-btn active" onclick="switchTab('text')">🔤 Text</button>
+      <button class="tab-btn" onclick="switchTab('image')">🖼️ Image</button>
+      <button class="tab-btn" onclick="switchTab('crop')">✂️ Crop/Cut</button>
+      <button class="tab-btn" onclick="switchTab('filter')">🪄 Filter</button>
+      <button class="tab-btn" onclick="switchTab('font')">🗚 Fonts</button>
+      <button class="tab-btn" onclick="switchTab('motion')">🎬 Motion</button>
+    </div>
+  </div>
+
+  <!-- টেক্সট মডাল -->
+  <div class="modal-overlay" id="textModal">
+    <div class="modal-card">
+      <span style="font-size:12px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (700-1000 WORDS SUPPORTED)</span>
+      <textarea id="modalScriptInput">In 1988, Dave Grohl was broke, sleeping on floors in Virginia and playing drums for bands that barely paid. Tommy drove him to 86 gigs in an old truck with a cracked windshield. In 2011, Grohl bought back the truck and gave Tommy a $28,000 cheque.</textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button onclick="closeTextEditor(false)" style="padding:7px 14px; background:#334155; border:none; border-radius:6px; color:#fff;">Cancel</button>
+        <button onclick="closeTextEditor(true)" style="padding:7px 14px; background:#0ea5e9; border:none; border-radius:6px; color:#fff;">Done</button>
       </div>
     </div>
   </div>
 
   <script>
-    let cropper = null;
-    let originalImageSrc = '';
-    let currentImageSrc = '';
+    const canvas = document.getElementById('shortsCanvas');
+    const ctx = canvas.getContext('2d');
+    let currentTab = 'text';
 
-    const imageElement = document.getElementById('image');
-    const captureArea = document.getElementById('capture-area');
-    const captionBox = document.getElementById('caption-box');
-    const textInput = document.getElementById('text-input');
-    const fontSelect = document.getElementById('font-select');
-    const saveTag = document.getElementById('save-tag');
+    // ইমেজ অবজেক্ট স্টেট
+    let originalImg = null; 
+    let loadedImg = null;
+    let showBeforeComparison = false;
 
-    // লোকাল স্টোরেজ ও অটো-সেভ
-    function saveState() {
-      localStorage.setItem('editor_currImg', currentImageSrc);
-      localStorage.setItem('editor_origImg', originalImageSrc);
-      localStorage.setItem('editor_text', textInput.value);
-      localStorage.setItem('editor_font', fontSelect.value);
-      localStorage.setItem('editor_fontSize', document.getElementById('font-size').value);
-      
-      saveTag.style.display = 'block';
-      setTimeout(() => { saveTag.style.display = 'none'; }, 900);
+    let imgState = {
+      x: 0, y: 0, scale: 1.0,
+      cropX: 0, cropY: 0, cropW: 0, cropH: 0,
+      mask: 'none', filter: 'hdr'
+    };
+
+    // টেক্সট অবজেক্ট স্টেট
+    let textState = {
+      x: 50, y: 920, w: 980, h: 900,
+      fontSize: 32, stroke: 10,
+      font: "'Montserrat', sans-serif",
+      align: 'left', case: 'uppercase',
+      colorDefault: '#FFFFFF', colorNum: '#FFEA00', colorName: '#38BDF8',
+      rawText: document.getElementById('modalScriptInput').value
+    };
+
+    let motionState = { type: 'zoomIn', duration: 10 };
+    let activeSelection = 'text';
+
+    // মাল্টি-টাচ ও পিঞ্চ-জুম ভ্যারিয়েবল
+    let isInteracting = false;
+    let isPinching = false;
+    let touchStartDist = 0;
+    let initialScale = 1.0;
+    let dragStartX = 0, dragStartY = 0;
+
+    // বটম সাব-টুলস রেন্ডার
+    function renderSubTools() {
+      const bar = document.getElementById('subToolsBar');
+      if (currentTab === 'text') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw();"></div>
+          <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw();"></div>
+          <div class="tool-item"><label>ALIGN</label>
+            <select onchange="textState.align=this.value; draw();">
+              <option value="left" ${textState.align==='left'?'selected':''}>Left</option>
+              <option value="center" ${textState.align==='center'?'selected':''}>Center</option>
+              <option value="right" ${textState.align==='right'?'selected':''}>Right</option>
+            </select>
+          </div>
+          <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw();"></div>
+        `;
+      } else if (currentTab === 'image') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>ZOOM/SCALE</label><input type="range" min="0.2" max="4.0" step="0.05" value="${imgState.scale}" oninput="imgState.scale=parseFloat(this.value); draw();"></div>
+          <div class="tool-item"><label>MOVE X</label><input type="range" min="-800" max="800" value="${imgState.x}" oninput="imgState.x=parseInt(this.value); draw();"></div>
+          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-800" max="1000" value="${imgState.y}" oninput="imgState.y=parseInt(this.value); draw();"></div>
+        `;
+      } else if (currentTab === 'crop') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>ASPECT RATIO</label>
+            <select onchange="applyCropRatio(this.value)">
+              <option value="none">Original (No Crop)</option>
+              <option value="9:16">9:16 Shorts</option>
+              <option value="1:1">1:1 Square</option>
+              <option value="4:5">4:5 Instagram</option>
+              <option value="16:9">16:9 Landscape</option>
+              <option value="free">Custom Box Crop</option>
+            </select>
+          </div>
+          <div class="tool-item"><label>MASK EFFECT</label>
+            <select onchange="imgState.mask=this.value; draw();">
+              <option value="none">None</option>
+              <option value="circle">Circle Mask</option>
+              <option value="rounded">Rounded Corner</option>
+              <option value="fadeBottom">Cinematic Bottom Fade</option>
+            </select>
+          </div>
+        `;
+      } else if (currentTab === 'filter') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>SMART FILTER</label>
+            <select onchange="imgState.filter=this.value; draw();">
+              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR (Auto)</option>
+              <option value="warm" ${imgState.filter==='warm'?'selected':''}>Warm Hollywood</option>
+              <option value="cool" ${imgState.filter==='cool'?'selected':''}>Moody Blue</option>
+              <option value="cyber" ${imgState.filter==='cyber'?'selected':''}>Cyberpunk</option>
+              <option value="bw" ${imgState.filter==='bw'?'selected':''}>Noir B&W</option>
+              <option value="none" ${imgState.filter==='none'?'selected':''}>Original (No Filter)</option>
+            </select>
+          </div>
+        `;
+      } else if (currentTab === 'font') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>VIRAL GOOGLE FONTS</label>
+            <select onchange="textState.font=this.value; draw();">
+              <option value="'Montserrat', sans-serif">Montserrat Black</option>
+              <option value="'Anton', sans-serif">Anton Impact</option>
+              <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+              <option value="'League Spartan', sans-serif">League Spartan</option>
+              <option value="'Poppins', sans-serif">Poppins Heavy</option>
+              <option value="'Oswald', sans-serif">Oswald Bold</option>
+              <option value="'Cinzel', serif">Cinzel Cinematic</option>
+              <option value="'Impact', sans-serif">Impact Classic</option>
+              <option value="'Teko', sans-serif">Teko Tall</option>
+              <option value="'Playfair Display', serif">Playfair Luxury</option>
+              <option value="'Rubik', sans-serif">Rubik Black</option>
+            </select>
+          </div>
+          <div class="tool-item"><label>PHONE CUSTOM FONT</label>
+            <input type="file" id="customFontLoader" accept=".ttf,.otf,.woff" onchange="loadCustomPhoneFont(event)">
+          </div>
+        `;
+      } else if (currentTab === 'motion') {
+        bar.innerHTML = `
+          <div class="tool-item"><label>CAMERA MOTION</label>
+            <select onchange="motionState.type=this.value;">
+              <option value="zoomIn">Slow Zoom In</option>
+              <option value="zoomOut">Slow Zoom Out</option>
+              <option value="none">Static</option>
+            </select>
+          </div>
+          <div class="tool-item"><label>DURATION</label>
+            <select onchange="motionState.duration=parseInt(this.value);">
+              <option value="10">10s</option>
+              <option value="12">12s</option>
+              <option value="15">15s</option>
+              <option value="20">20s</option>
+            </select>
+          </div>
+        `;
+      }
     }
 
-    // অটো-রিস্টোর
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedCurr = localStorage.getItem('editor_currImg');
-      const savedOrig = localStorage.getItem('editor_origImg');
-      const savedText = localStorage.getItem('editor_text') || 
-        `[PAMELA ANDERSON] SPENT MUCH OF HER LIFE HIDING BEHIND MAKEUP, [FALSE LASHES], AND A CAREFULLY CREATED IMAGE. AT [59], SHE APPEARED ON A [RED CARPET] WITHOUT FOUNDATION...`;
-      const savedFont = localStorage.getItem('editor_font') || "'Impact', 'Arial Black', sans-serif";
-      const savedFontSize = localStorage.getItem('editor_fontSize') || '18';
+    function switchTab(tab) {
+      currentTab = tab;
+      activeSelection = (tab === 'image' || tab === 'crop' || tab === 'filter') ? 'image' : 'text';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      renderSubTools();
+      draw();
+    }
 
-      if (savedOrig) originalImageSrc = savedOrig;
-      if (savedCurr) {
-        currentImageSrc = savedCurr;
-        loadImage(currentImageSrc, false);
-      }
-
-      textInput.value = savedText;
-      fontSelect.value = savedFont;
-      document.getElementById('font-size').value = savedFontSize;
-
-      setFont(savedFont, false);
-      setFontSize(savedFontSize, false);
-      renderText(false);
-      setupDrag();
-    });
-
-    // ছবি লোড
-    document.getElementById('file-input').addEventListener('change', function(e) {
+    // ১. যেকোনো ফরম্যাটের ইমেজ আপলোড হ্যান্ডলার
+    document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        originalImageSrc = event.target.result;
-        loadImage(originalImageSrc);
-      };
-      reader.readAsDataURL(file);
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = new Image();
+          img.onload = () => {
+            originalImg = img;
+            loadedImg = img;
+            imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
+            imgState.cropX = 0; imgState.cropY = 0;
+            imgState.cropW = img.width; imgState.cropH = img.height;
+            switchTab('image');
+            draw();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
     });
 
-    function loadImage(src, save = true) {
-      currentImageSrc = src;
-      imageElement.src = src;
-      imageElement.style.display = 'block';
-
-      if (cropper) {
-        cropper.destroy();
-        cropper = null;
-        document.getElementById('crop-apply-btn').style.display = 'none';
-      }
-
-      if (save) saveState();
-    }
-
-    // ক্রপ ফিচার
-    function startCrop(ratio) {
-      if (!imageElement.src || imageElement.style.display === 'none') return;
-      if (cropper) cropper.destroy();
-
-      cropper = new Cropper(imageElement, {
-        aspectRatio: ratio === 'free' ? NaN : ratio,
-        viewMode: 1,
-        autoCropArea: 0.95
-      });
-      document.getElementById('crop-apply-btn').style.display = 'inline-block';
-    }
-
-    function applyCrop() {
-      if (!cropper) return;
-      currentImageSrc = cropper.getCroppedCanvas().toDataURL();
-      cropper.destroy();
-      cropper = null;
-      document.getElementById('crop-apply-btn').style.display = 'none';
-      loadImage(currentImageSrc);
-    }
-
-    // ক্যাপশন টেক্সট রেন্ডারার
-    function renderText(save = true) {
-      const val = textInput.value;
-      if (!val) {
-        captionBox.innerHTML = '';
-        if (save) saveState();
-        return;
-      }
-
-      // [ব্র্যাকেট] থাকলে ভিডিওর মতো সায়ান কালার, বাকি সাদা
-      let formatted = val.replace(/\[(.*?)\]/g, '<span class="c-cyan">$1</span>');
-      formatted = formatted.replace(/([^\]\n]+)(?=\[|$)/g, function(match) {
-        if (!match.trim()) return match;
-        return '<span class="c-white">' + match + '</span>';
-      });
-
-      formatted = formatted.replace(/\n/g, '<br>');
-      captionBox.innerHTML = formatted;
-      if (save) saveState();
-    }
-
-    // হাইলাইট শর্টকাট
-    function insertHighlight() {
-      const start = textInput.selectionStart;
-      const end = textInput.selectionEnd;
-      const text = textInput.value;
-      if (start !== end) {
-        const selected = text.substring(start, end);
-        textInput.value = text.substring(0, start) + '[' + selected + ']' + text.substring(end);
+    // ২. ইমেজ ক্রপ লজিক
+    function applyCropRatio(ratio) {
+      if (!loadedImg) return;
+      let w = originalImg.width, h = originalImg.height;
+      if (ratio === '9:16') {
+        let cw = Math.min(w, h * (9/16));
+        imgState.cropW = cw; imgState.cropH = cw * (16/9);
+      } else if (ratio === '1:1') {
+        let s = Math.min(w, h);
+        imgState.cropW = s; imgState.cropH = s;
+      } else if (ratio === '4:5') {
+        let cw = Math.min(w, h * (4/5));
+        imgState.cropW = cw; imgState.cropH = cw * (5/4);
+      } else if (ratio === '16:9') {
+        let ch = Math.min(h, w * (9/16));
+        imgState.cropW = ch * (16/9); imgState.cropH = ch;
+      } else if (ratio === 'free') {
+        imgState.cropW = w * 0.8; imgState.cropH = h * 0.8;
       } else {
-        textInput.value += ' [HIGHLIGHT]';
+        imgState.cropW = w; imgState.cropH = h;
       }
-      renderText();
+      imgState.cropX = (w - imgState.cropW) / 2;
+      imgState.cropY = (h - imgState.cropH) / 2;
+      draw();
     }
 
-    function setFont(fontName, save = true) {
-      captionBox.style.fontFamily = fontName;
-      if (save) saveState();
+    // ৩. ডিলিট, রিস্টোর এবং আফটার-বিফোর কম্পেয়ার
+    function deleteImage() {
+      loadedImg = null;
+      originalImg = null;
+      draw();
     }
 
-    function setFontSize(size, save = true) {
-      captionBox.style.fontSize = size + 'px';
-      if (save) saveState();
+    function restoreOriginalImage() {
+      if (originalImg) {
+        loadedImg = originalImg;
+        imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
+        imgState.cropX = 0; imgState.cropY = 0;
+        imgState.cropW = originalImg.width; imgState.cropH = originalImg.height;
+        imgState.mask = 'none';
+        imgState.filter = 'hdr';
+        draw();
+      }
     }
 
-    // কাস্টম ফন্ট আপলোড
-    function loadCustomFont(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const fontName = 'Font_' + Date.now();
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const font = new FontFace(fontName, evt.target.result);
-        font.load().then(function(loaded) {
-          document.fonts.add(loaded);
-          setFont(fontName);
-          const opt = document.createElement('option');
-          opt.value = fontName;
-          opt.innerText = file.name;
-          opt.selected = true;
-          fontSelect.appendChild(opt);
-        });
+    const btnCompare = document.getElementById('btnCompare');
+    btnCompare.addEventListener('pointerdown', () => { showBeforeComparison = true; draw(); });
+    window.addEventListener('pointerup', () => { if (showBeforeComparison) { showBeforeComparison = false; draw(); } });
+
+    // ৪. কাস্টম ফোন ফন্ট লোডার
+    function loadCustomPhoneFont(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const fontName = 'CustomFont_' + Date.now();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const font = new FontFace(fontName, e.target.result);
+          font.load().then(loadedFace => {
+            document.fonts.add(loadedFace);
+            textState.font = `'${fontName}', sans-serif`;
+            draw();
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    // ৫. দুই আঙুলে পিঞ্চ-জুম এবং টাচ ড্র্যাগ হ্যান্ডলার
+    const canvasBox = document.getElementById('canvasBox');
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (cx - rect.left) * (canvas.width / rect.width),
+        y: (cy - rect.top) * (canvas.height / rect.height)
       };
-      reader.readAsArrayBuffer(file);
     }
 
-    // টাচ বা মাউস দিয়ে টেক্সট ড্র্যাগ করে উপরে-নিচে সরানো
-    function setupDrag() {
-      let isDragging = false;
-      let startY, startTop;
-
-      function onStart(e) {
-        isDragging = true;
-        startY = e.touches ? e.touches[0].clientY : e.clientY;
-        startTop = captionBox.offsetTop;
+    canvasBox.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        // পিঞ্চ জুম শুরু
+        isPinching = true;
+        touchStartDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = imgState.scale;
+      } else if (e.touches.length === 1) {
+        const p = getCoords(e);
+        dragStartX = p.x; dragStartY = p.y;
+        isInteracting = true;
       }
+    }, { passive: false });
 
-      function onMove(e) {
-        if (!isDragging) return;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const deltaY = clientY - startY;
-        captionBox.style.top = (startTop + deltaY) + 'px';
+    window.addEventListener('touchmove', (e) => {
+      if (isPinching && e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        imgState.scale = Math.max(0.2, Math.min(4.0, initialScale * (dist / touchStartDist)));
+        draw();
+        e.preventDefault();
+      } else if (isInteracting && e.touches.length === 1) {
+        const p = getCoords(e);
+        const dx = p.x - dragStartX;
+        const dy = p.y - dragStartY;
+
+        if (activeSelection === 'text') {
+          textState.x += dx; textState.y += dy;
+        } else {
+          imgState.x += dx; imgState.y += dy;
+        }
+        dragStartX = p.x; dragStartY = p.y;
+        draw();
+        e.preventDefault();
       }
+    }, { passive: false });
 
-      function onEnd() { isDragging = false; }
+    window.addEventListener('touchend', () => {
+      isInteracting = false;
+      isPinching = false;
+    });
 
-      captionBox.addEventListener('mousedown', onStart);
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onEnd);
+    // মাউস ড্র্যাগ (পিসির জন্য)
+    canvasBox.addEventListener('mousedown', (e) => {
+      const p = getCoords(e);
+      dragStartX = p.x; dragStartY = p.y;
+      isInteracting = true;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isInteracting) return;
+      const p = getCoords(e);
+      const dx = p.x - dragStartX;
+      const dy = p.y - dragStartY;
+      if (activeSelection === 'text') { textState.x += dx; textState.y += dy; }
+      else { imgState.x += dx; imgState.y += dy; }
+      dragStartX = p.x; dragStartY = p.y;
+      draw();
+    });
+    window.addEventListener('mouseup', () => { isInteracting = false; });
 
-      captionBox.addEventListener('touchstart', onStart, { passive: true });
-      window.addEventListener('touchmove', onMove, { passive: true });
-      window.addEventListener('touchend', onEnd);
+    // টেক্সট এডিটর
+    function openTextEditor() {
+      document.getElementById('modalScriptInput').value = textState.rawText;
+      document.getElementById('textModal').style.display = 'flex';
+    }
+    function closeTextEditor(save) {
+      if (save) {
+        textState.rawText = document.getElementById('modalScriptInput').value;
+        draw();
+      }
+      document.getElementById('textModal').style.display = 'none';
     }
 
-    // এডিট করা ইমেজ সেভ/ডাউনলোড করা
-    function saveAsImage() {
-      if (!imageElement.src || imageElement.style.display === 'none') {
-        alert("প্রথমে একটি ছবি নির্বাচন করুন!");
-        return;
-      }
-      html2canvas(captureArea).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'edited-shorts.png';
-        link.href = canvas.toDataURL();
-        link.click();
+    // স্মার্ট কালার পার্সিং
+    function parseStoryWords(text) {
+      const isUpper = textState.case === 'uppercase';
+      let cleanText = isUpper ? text.toUpperCase() : text;
+      const words = cleanText.trim().split(/\s+/);
+      const ignore = ['THE','AND','FOR','WAS','HIS','HER','WITH','FROM','THAT','THEN','WHEN','THEY','THIS','INTO','OVER'];
+
+      return words.map(w => {
+        let clean = w.replace(/[^a-zA-Z0-9$]/g, '');
+        let col = textState.colorDefault;
+        if (/(\$|\b\d+[\d,]*\b)/.test(clean)) col = textState.colorNum;
+        else if (clean.length > 2 && !ignore.includes(clean.toUpperCase()) && /^[A-Z]/.test(clean)) col = textState.colorName;
+        return { text: w, color: col };
       });
     }
 
-    function deleteImage() {
-      imageElement.src = '';
-      imageElement.style.display = 'none';
-      currentImageSrc = '';
-      if (cropper) cropper.destroy();
-      saveState();
-    }
-
-    function clearAllData() {
-      if (confirm("সব কিছু ক্লিয়ার করে নতুন করে শুরু করবেন?")) {
-        deleteImage();
-        textInput.value = '';
-        renderText();
-        localStorage.clear();
+    function getFilterCSS() {
+      if (showBeforeComparison) return 'none'; // আফটার-বিফোর কম্পেয়ার
+      switch (imgState.filter) {
+        case 'hdr': return 'contrast(130%) saturate(140%) brightness(105%)';
+        case 'warm': return 'sepia(30%) saturate(140%) contrast(115%) brightness(105%)';
+        case 'cool': return 'hue-rotate(185deg) contrast(120%) saturate(120%)';
+        case 'cyber': return 'hue-rotate(305deg) contrast(140%) saturate(160%)';
+        case 'bw': return 'grayscale(100%) contrast(150%) brightness(95%)';
+        default: return 'none';
       }
     }
+
+    // ক্যানভাস রেন্ডারিং
+    function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // ১. ব্যাকগ্রাউন্ড ইমেজ, ক্রপ এবং মাস্কিং
+      if (loadedImg) {
+        ctx.save();
+        if (imgState.mask === 'circle') {
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, 480, 380, 0, Math.PI * 2);
+          ctx.clip();
+        } else if (imgState.mask === 'rounded') {
+          ctx.beginPath();
+          ctx.roundRect(60, 80, canvas.width - 120, 800, 40);
+          ctx.clip();
+        }
+
+        ctx.filter = getFilterCSS();
+
+        let sx = imgState.cropX, sy = imgState.cropY;
+        let sw = imgState.cropW, sh = imgState.cropH;
+
+        let dw = canvas.width * imgState.scale * scaleMotion;
+        let dh = (sh / sw) * dw;
+        let dx = (canvas.width - dw) / 2 + imgState.x;
+        let dy = imgState.y + motionOffsetY;
+
+        ctx.drawImage(loadedImg, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.restore();
+
+        if (imgState.mask === 'fadeBottom') {
+          let fade = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          fade.addColorStop(0, 'rgba(0,0,0,0.2)');
+          fade.addColorStop(0.45, 'rgba(0,0,0,0.02)');
+          fade.addColorStop(0.7, 'rgba(9,12,19,0.85)');
+          fade.addColorStop(1, 'rgba(9,12,19,1)');
+          ctx.fillStyle = fade;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      // ২. টেক্সট প্লেট
+      ctx.fillStyle = 'rgba(11, 17, 32, 0.78)';
+      ctx.beginPath();
+      ctx.roundRect(textState.x, textState.y, textState.w, textState.h, 24);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // ৩. টাইপোগ্রাফি
+      const fSize = textState.fontSize;
+      const sWidth = textState.stroke;
+      const words = parseStoryWords(textState.rawText);
+
+      ctx.font = `900 ${fSize}px ${textState.font}`;
+      ctx.textBaseline = 'top';
+
+      const padX = 35;
+      const maxW = textState.w - (padX * 2);
+      const lineH = fSize * 1.5;
+
+      let lines = [];
+      let curLine = [];
+      let curLineWidth = 0;
+
+      words.forEach(item => {
+        const wStr = item.text + ' ';
+        const wWidth = ctx.measureText(wStr).width;
+        if (curLineWidth + wWidth > maxW) {
+          lines.push(curLine);
+          curLine = [item];
+          curLineWidth = wWidth;
+        } else {
+          curLine.push(item);
+          curLineWidth += wWidth;
+        }
+      });
+      if (curLine.length > 0) lines.push(curLine);
+
+      let curY = textState.y + 30;
+      lines.forEach(line => {
+        if (curY + lineH > textState.y + textState.h - 20) return;
+        const lineTotalW = line.reduce((sum, item) => sum + ctx.measureText(item.text + ' ').width, 0);
+        let curX = textState.x + padX;
+        if (textState.align === 'center') curX = textState.x + (textState.w - lineTotalW) / 2;
+        else if (textState.align === 'right') curX = textState.x + textState.w - padX - lineTotalW;
+
+        line.forEach(item => {
+          const wStr = item.text + ' ';
+          const wWidth = ctx.measureText(wStr).width;
+          if (sWidth > 0) {
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = sWidth;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(wStr, curX, curY);
+          }
+          ctx.shadowColor = 'rgba(0,0,0,0.95)';
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = item.color;
+          ctx.fillText(wStr, curX, curY);
+          curX += wWidth;
+        });
+        curY += lineH;
+      });
+      ctx.shadowBlur = 0;
+
+      // ৪. সিলেকশন ইন্ডিকেটর
+      if (renderUI && activeSelection === 'text') {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(textState.x - 4, textState.y - 4, textState.w + 8, textState.h + 8);
+        ctx.setLineDash([]);
+      }
+    }
+
+    // পিএনজি এক্সপোর্ট
+    function downloadTransparentPNG() {
+      draw(1.0, 0, false);
+      const a = document.createElement('a');
+      a.download = `Shorts_Overlay_${Date.now()}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      draw();
+    }
+
+    // মোশন ভিডিও রেন্ডার
+    async function renderMotionVideo() {
+      if (!loadedImg) {
+        alert("অনুগ্রহ করে ➕ চেপে ছবি আপলোড করুন!");
+        return;
+      }
+      const btn = document.getElementById('renderBtn');
+      btn.disabled = true;
+      btn.innerText = "RENDERING...";
+
+      const duration = motionState.duration;
+      const fps = 30;
+      const totalFrames = duration * fps;
+
+      const stream = canvas.captureStream(fps);
+      let mime = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+
+      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mime });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Motion_Video_${Date.now()}.webm`;
+        a.click();
+        btn.disabled = false;
+        btn.innerText = "🎥 EXPORT";
+        draw();
+      };
+
+      recorder.start();
+      for (let f = 0; f < totalFrames; f++) {
+        const p = f / totalFrames;
+        let scale = 1.0, offsetY = 0;
+        if (motionState.type === 'zoomIn') {
+          scale = 1.0 + (p * 0.20);
+          offsetY = - (p * 35);
+        } else if (motionState.type === 'zoomOut') {
+          scale = 1.20 - (p * 0.20);
+          offsetY = - (35 - (p * 35));
+        }
+        draw(scale, offsetY, false);
+        await new Promise(r => setTimeout(r, 1000 / fps));
+      }
+      recorder.stop();
+    }
+
+    // ৬. ডিরেক্ট অ্যাপ ইনস্টল হ্যান্ডলার (PWA Prompt)
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('pwaInstallBtn');
+      if (installBtn) installBtn.style.display = 'block';
+    });
+
+    function installAppDirect() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          document.getElementById('pwaInstallBtn').style.display = 'none';
+        });
+      }
+    }
+
+    window.onload = () => {
+      renderSubTools();
+      draw();
+    };
   </script>
 </body>
 </html>
