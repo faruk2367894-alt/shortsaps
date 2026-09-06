@@ -17,7 +17,7 @@
     }
     html, body {
       height: 100%;
-      height: 100dvh; /* ডায়নামিক মোবাইল হাইট */
+      height: 100dvh;
       overflow: hidden;
       background: #090c13;
       color: #e2e8f0;
@@ -60,6 +60,17 @@
       border-radius: 6px;
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
+    .btn-install {
+      background: #22c55e;
+      color: #041a0e;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: none; /* ডিফল্ট হাইড */
+    }
     .btn-export {
       background: #10b981;
       color: #022013;
@@ -71,10 +82,10 @@
       cursor: pointer;
     }
 
-    /* ২. ক্যানভাস এরিয়া (অটো স্কেলিং) */
+    /* ২. ক্যানভাস এরিয়া */
     .workspace {
       flex: 1;
-      min-height: 0; /* ফ্লেক্স চাইল্ডের নিচে ওভারফ্লো হওয়া বন্ধ করে */
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -99,7 +110,7 @@
       touch-action: none;
     }
 
-    /* ৩. বটম কন্ট্রোল প্যানেল (সব সময় স্ক্রিনে আটকে থাকবে) */
+    /* ৩. বটম প্যানেল */
     .bottom-panel {
       min-height: 96px;
       background: #121824;
@@ -107,7 +118,7 @@
       display: flex;
       flex-direction: column;
       z-index: 20;
-      flex-shrink: 0; /* স্ক্রিন ছোট হলেও সাইজ নষ্ট হবে না */
+      flex-shrink: 0;
     }
     .sub-tools {
       height: 48px;
@@ -202,6 +213,65 @@
       font-size: 12px;
       resize: none;
     }
+
+    /* ৪. ক্রপ স্টুডিও পপআপ */
+    #cropModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      display: none;
+      flex-direction: column;
+      z-index: 150;
+      padding: 10px;
+    }
+    .crop-topbar {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a374f;
+      padding: 0 8px;
+      color: #38bdf8;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .crop-workspace {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    #cropCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      touch-action: none;
+    }
+    .crop-bottombar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 6px 0;
+    }
+    .crop-pill {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .crop-pill.active {
+      background: #0ea5e9;
+      color: #fff;
+      border-color: #38bdf8;
+    }
   </style>
 </head>
 <body>
@@ -218,6 +288,7 @@
         <button class="top-btn" id="btnCompare" title="Before/After Compare">👁️</button>
       </div>
       <div class="top-icons">
+        <button class="btn-install" id="pwaInstallBtn" onclick="installAppDirect()">📲 INSTALL APP</button>
         <button class="top-btn" onclick="downloadTransparentPNG()" title="Download Transparent PNG">📥 PNG</button>
         <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
       </div>
@@ -253,12 +324,32 @@
     </div>
   </div>
 
+  <div id="cropModal">
+    <div class="crop-topbar">
+      <span>✂️ CROP STUDIO</span>
+      <div style="display:flex; gap:6px;">
+        <button onclick="closeCropModal(false)" style="padding:4px 10px; background:#334155; color:#fff; border:none; border-radius:4px; font-size:10px;">CANCEL</button>
+        <button onclick="closeCropModal(true)" style="padding:4px 12px; background:#22c55e; color:#000; border:none; border-radius:4px; font-weight:bold; font-size:10px;">APPLY</button>
+      </div>
+    </div>
+    <div class="crop-workspace">
+      <canvas id="cropCanvas"></canvas>
+    </div>
+    <div class="crop-bottombar">
+      <button class="crop-pill active" onclick="setCropAspect('free', this)">Free-Hand Box</button>
+      <button class="crop-pill" onclick="setCropAspect('9:16', this)">9:16 Shorts</button>
+      <button class="crop-pill" onclick="setCropAspect('1:1', this)">1:1 Square</button>
+      <button class="crop-pill" onclick="setCropAspect('4:5', this)">4:5 Portrait</button>
+      <button class="crop-pill" onclick="setCropAspect('16:9', this)">16:9 Wide</button>
+      <button class="crop-pill" onclick="setCropAspect('3:4', this)">3:4 Document</button>
+    </div>
+  </div>
+
   <script>
     const canvas = document.getElementById('shortsCanvas');
     const ctx = canvas.getContext('2d');
     let currentTab = 'text';
 
-    // স্টেট অবজেক্ট
     let originalImg = null; 
     let loadedImg = null;
     let showBeforeComparison = false;
@@ -281,7 +372,40 @@
     let motionState = { type: 'zoomIn', duration: 10 };
     let activeSelection = 'text';
 
-    // ১. অটো-সেভ ও মেমোরি রিস্টোর ফাংশন (State Persistence)
+    // ১. স্মার্ট অ্যাপ ইনস্টল চেক (ইনস্টল থাকলে বাটন আর শো করবে না)
+    let deferredPrompt = null;
+    const pwaBtn = document.getElementById('pwaInstallBtn');
+
+    function checkStandaloneMode() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isStandalone) {
+        pwaBtn.style.display = 'none'; // অ্যাপে ঢুকলে বাটন থাকবে না
+      }
+    }
+    checkStandaloneMode();
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (!isStandalone) {
+        pwaBtn.style.display = 'block'; // শুধু ব্রাউজারে থাকলে শো করবে
+      }
+    });
+
+    function installAppDirect() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((res) => {
+          if (res.outcome === 'accepted') {
+            pwaBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    // ২. অটো-সেভ ও মেমোরি রিস্টোর
     function saveProjectState() {
       const stateToSave = {
         imgState: imgState,
@@ -304,7 +428,6 @@
           document.getElementById('modalScriptInput').value = textState.rawText;
         } catch(e) {}
       }
-      // সেভ করা ছবি থাকলে লোড করা
       const savedImgData = localStorage.getItem('pixelLabSavedImg');
       if (savedImgData) {
         const img = new Image();
@@ -317,7 +440,7 @@
       }
     }
 
-    // ২. বটম সাব-টুলস রেন্ডারিং
+    // ৩. সাব-টুলস রেন্ডারিং
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
@@ -341,14 +464,8 @@
         `;
       } else if (currentTab === 'crop') {
         bar.innerHTML = `
-          <div class="tool-item"><label>ASPECT RATIO</label>
-            <select onchange="applyCropRatio(this.value)">
-              <option value="none">Original</option>
-              <option value="9:16">9:16 Shorts</option>
-              <option value="1:1">1:1 Square</option>
-              <option value="4:5">4:5 Insta</option>
-              <option value="16:9">16:9 Wide</option>
-            </select>
+          <div class="tool-item"><label>CROP TOOL</label>
+            <button onclick="openCropModal()" style="padding:4px 8px; background:#0ea5e9; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold;">✂️ OPEN CROP BOX</button>
           </div>
           <div class="tool-item"><label>MASK EFFECT</label>
             <select onchange="imgState.mask=this.value; draw(); saveProjectState();">
@@ -436,7 +553,6 @@
             switchTab('image');
             draw();
             saveProjectState();
-            // ইমেজ স্টোরেজে ক্যাশ করা
             try { localStorage.setItem('pixelLabSavedImg', evt.target.result); } catch(err){}
           };
           img.src = evt.target.result;
@@ -445,28 +561,158 @@
       }
     });
 
-    function applyCropRatio(ratio) {
-      if (!loadedImg) return;
-      let w = originalImg.width, h = originalImg.height;
-      if (ratio === '9:16') {
-        let cw = Math.min(w, h * (9/16));
-        imgState.cropW = cw; imgState.cropH = cw * (16/9);
-      } else if (ratio === '1:1') {
-        let s = Math.min(w, h);
-        imgState.cropW = s; imgState.cropH = s;
-      } else if (ratio === '4:5') {
-        let cw = Math.min(w, h * (4/5));
-        imgState.cropW = cw; imgState.cropH = cw * (5/4);
-      } else if (ratio === '16:9') {
-        let ch = Math.min(h, w * (9/16));
-        imgState.cropW = ch * (16/9); imgState.cropH = ch;
-      } else {
-        imgState.cropW = w; imgState.cropH = h;
+    // ৪. কাস্টম ও বক্স ক্রপ ইঞ্জিন (Interactive Crop Studio)
+    const cropModal = document.getElementById('cropModal');
+    const cropCanvas = document.getElementById('cropCanvas');
+    const cropCtx = cropCanvas.getContext('2d');
+    let cropBox = { x: 50, y: 50, w: 200, h: 200 };
+    let cropRatioMode = 'free';
+    let isDraggingCrop = false;
+    let isResizingCrop = false;
+    let cropTouchStart = { x: 0, y: 0 };
+    let cropCanvasScale = 1.0;
+
+    function openCropModal() {
+      if (!originalImg) {
+        alert("অনুগ্রহ করে আগে একটি ছবি আপলোড করুন!");
+        return;
       }
-      imgState.cropX = (w - imgState.cropW) / 2;
-      imgState.cropY = (h - imgState.cropH) / 2;
-      draw();
-      saveProjectState();
+      cropModal.style.display = 'flex';
+      setupCropCanvas();
+    }
+
+    function setupCropCanvas() {
+      const maxW = window.innerWidth - 30;
+      const maxH = window.innerHeight - 130;
+      let w = originalImg.width;
+      let h = originalImg.height;
+
+      const scale = Math.min(maxW / w, maxH / h, 1.0);
+      cropCanvas.width = w * scale;
+      cropCanvas.height = h * scale;
+      cropCanvasScale = scale;
+
+      cropBox = {
+        x: (cropCanvas.width * 0.1),
+        y: (cropCanvas.height * 0.1),
+        w: (cropCanvas.width * 0.8),
+        h: (cropCanvas.height * 0.8)
+      };
+      drawCropView();
+    }
+
+    function setCropAspect(aspect, btn) {
+      cropRatioMode = aspect;
+      document.querySelectorAll('.crop-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      let w = cropCanvas.width;
+      let h = cropCanvas.height;
+
+      if (aspect === '9:16') {
+        let cw = Math.min(w * 0.8, (h * 0.8) * (9/16));
+        cropBox.w = cw; cropBox.h = cw * (16/9);
+      } else if (aspect === '1:1') {
+        let s = Math.min(w * 0.8, h * 0.8);
+        cropBox.w = s; cropBox.h = s;
+      } else if (aspect === '4:5') {
+        let cw = Math.min(w * 0.8, (h * 0.8) * (4/5));
+        cropBox.w = cw; cropBox.h = cw * (5/4);
+      } else if (aspect === '16:9') {
+        let ch = Math.min(h * 0.8, (w * 0.8) * (9/16));
+        cropBox.w = ch * (16/9); cropBox.h = ch;
+      } else if (aspect === '3:4') {
+        let cw = Math.min(w * 0.8, (h * 0.8) * (3/4));
+        cropBox.w = cw; cropBox.h = cw * (4/3);
+      }
+      cropBox.x = (w - cropBox.w) / 2;
+      cropBox.y = (h - cropBox.h) / 2;
+      drawCropView();
+    }
+
+    function drawCropView() {
+      cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      cropCtx.drawImage(originalImg, 0, 0, cropCanvas.width, cropCanvas.height);
+
+      // ডার্কেন বাইরে
+      cropCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+      cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+
+      // ক্রপ এলাকার ভেতর ক্লিয়ার
+      cropCtx.clearRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
+      cropCtx.drawImage(originalImg, 
+        cropBox.x / cropCanvasScale, cropBox.y / cropCanvasScale, cropBox.w / cropCanvasScale, cropBox.h / cropCanvasScale,
+        cropBox.x, cropBox.y, cropBox.w, cropBox.h
+      );
+
+      // ক্রপ বাউন্ডারি ও হ্যান্ডেল
+      cropCtx.strokeStyle = '#38bdf8';
+      cropCtx.lineWidth = 2;
+      cropCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
+
+      // ৪ কোণায় হ্যান্ডেল
+      cropCtx.fillStyle = '#38bdf8';
+      const sz = 12;
+      cropCtx.fillRect(cropBox.x - sz/2, cropBox.y - sz/2, sz, sz);
+      cropCtx.fillRect(cropBox.x + cropBox.w - sz/2, cropBox.y - sz/2, sz, sz);
+      cropCtx.fillRect(cropBox.x - sz/2, cropBox.y + cropBox.h - sz/2, sz, sz);
+      cropCtx.fillRect(cropBox.x + cropBox.w - sz/2, cropBox.y + cropBox.h - sz/2, sz, sz);
+    }
+
+    // ক্রপ টাচ হ্যান্ডলার
+    cropCanvas.addEventListener('pointerdown', (e) => {
+      const rect = cropCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      cropTouchStart = { x, y };
+
+      // নিচের ডান কোণা চেক (Resize)
+      if (Math.hypot(x - (cropBox.x + cropBox.w), y - (cropBox.y + cropBox.h)) < 30) {
+        isResizingCrop = true;
+      } else if (x >= cropBox.x && x <= cropBox.x + cropBox.w && y >= cropBox.y && y <= cropBox.y + cropBox.h) {
+        isDraggingCrop = true;
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDraggingCrop && !isResizingCrop) return;
+      const rect = cropCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const dx = x - cropTouchStart.x;
+      const dy = y - cropTouchStart.y;
+
+      if (isDraggingCrop) {
+        cropBox.x = Math.max(0, Math.min(cropCanvas.width - cropBox.w, cropBox.x + dx));
+        cropBox.y = Math.max(0, Math.min(cropCanvas.height - cropBox.h, cropBox.y + dy));
+      } else if (isResizingCrop) {
+        cropBox.w = Math.max(50, Math.min(cropCanvas.width - cropBox.x, cropBox.w + dx));
+        if (cropRatioMode === 'free') {
+          cropBox.h = Math.max(50, Math.min(cropCanvas.height - cropBox.y, cropBox.h + dy));
+        } else {
+          const ratio = cropBox.w / (cropBox.w - dx);
+          cropBox.h = cropBox.h * ratio;
+        }
+      }
+      cropTouchStart = { x, y };
+      drawCropView();
+    });
+
+    window.addEventListener('pointerup', () => {
+      isDraggingCrop = false;
+      isResizingCrop = false;
+    });
+
+    function closeCropModal(apply) {
+      if (apply) {
+        imgState.cropX = cropBox.x / cropCanvasScale;
+        imgState.cropY = cropBox.y / cropCanvasScale;
+        imgState.cropW = cropBox.w / cropCanvasScale;
+        imgState.cropH = cropBox.h / cropCanvasScale;
+        draw();
+        saveProjectState();
+      }
+      cropModal.style.display = 'none';
     }
 
     function deleteImage() {
@@ -584,7 +830,6 @@
       }
     }
 
-    // ড্রয়িং ইঞ্জিন
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
