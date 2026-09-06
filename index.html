@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="theme-color" content="#111622">
   <title>PixelLab Shorts Studio Ultra</title>
-  <!-- ৫০+ জনপ্রিয় শর্টস ও টাইপোগ্রাফি ফন্ট প্যাক -->
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700;900&family=Impact&family=Inter:wght@700;900&family=League+Spartan:wght@800;900&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Playfair+Display:wght@900&family=Poppins:wght@800;900&family=Roboto+Condensed:wght@700;900&family=Rubik:wght@800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700;900&family=Impact&family=League+Spartan:wght@800;900&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Poppins:wght@800;900&family=Roboto+Condensed:wght@700;900&family=Rubik:wght@800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -16,17 +15,25 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-    body {
+    html, body {
+      height: 100%;
+      height: 100dvh; /* ডায়নামিক মোবাইল হাইট */
+      overflow: hidden;
       background: #090c13;
       color: #e2e8f0;
-      height: 100vh;
+    }
+    .app-root {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      height: 100%;
+      width: 100%;
+      position: relative;
     }
-    /* ১. পিক্সেলল্যাব প্রিমিয়াম টপ বার */
+
+    /* ১. টপ বার */
     .top-bar {
-      height: 48px;
+      height: 44px;
+      min-height: 44px;
       background: #141b27;
       display: flex;
       align-items: center;
@@ -38,7 +45,7 @@
     .top-icons {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .top-btn {
       background: transparent;
@@ -49,21 +56,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 6px;
+      padding: 5px;
       border-radius: 6px;
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
-    .btn-install {
-      background: #38bdf8;
-      color: #04101e;
-      font-size: 10px;
-      font-weight: 900;
-      padding: 5px 10px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      display: none;
-    }
     .btn-export {
       background: #10b981;
       color: #022013;
@@ -75,22 +71,24 @@
       cursor: pointer;
     }
 
-    /* ২. মূল ক্যানভাস ও ওয়ার্কস্পেস */
+    /* ২. ক্যানভাস এরিয়া (অটো স্কেলিং) */
     .workspace {
       flex: 1;
-      position: relative;
+      min-height: 0; /* ফ্লেক্স চাইল্ডের নিচে ওভারফ্লো হওয়া বন্ধ করে */
       display: flex;
       align-items: center;
       justify-content: center;
       background: #05070c;
       overflow: hidden;
-      touch-action: none;
+      padding: 4px;
+      position: relative;
     }
     .canvas-container {
-      height: 94%;
+      height: 100%;
+      max-height: 100%;
       aspect-ratio: 9 / 16;
-      background: repeating-conic-gradient(#161e2b 0% 25%, #0e141f 0% 50%) 50% / 18px 18px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.85);
+      background: repeating-conic-gradient(#161e2b 0% 25%, #0e141f 0% 50%) 50% / 16px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
       position: relative;
       border: 1px solid #233045;
     }
@@ -101,20 +99,24 @@
       touch-action: none;
     }
 
-    /* ৩. বটম টুলস প্যানেল */
+    /* ৩. বটম কন্ট্রোল প্যানেল (সব সময় স্ক্রিনে আটকে থাকবে) */
     .bottom-panel {
+      min-height: 96px;
       background: #121824;
       border-top: 1px solid #1f2a3c;
       display: flex;
       flex-direction: column;
       z-index: 20;
+      flex-shrink: 0; /* স্ক্রিন ছোট হলেও সাইজ নষ্ট হবে না */
     }
     .sub-tools {
-      padding: 8px 10px;
+      height: 48px;
+      padding: 4px 8px;
       overflow-x: auto;
       white-space: nowrap;
       display: flex;
-      gap: 10px;
+      align-items: center;
+      gap: 8px;
       background: #151d2c;
       border-bottom: 1px solid #1e293b;
     }
@@ -122,25 +124,25 @@
     .tool-item {
       display: inline-flex;
       flex-direction: column;
-      gap: 3px;
-      font-size: 9px;
+      gap: 2px;
+      font-size: 8.5px;
       color: #94a3b8;
-      font-weight: bold;
+      font-weight: 800;
     }
     .tool-item input[type="range"] {
-      width: 85px;
+      width: 80px;
       accent-color: #38bdf8;
     }
     .tool-item select, .tool-item input[type="color"] {
       background: #0a0e17;
       border: 1px solid #2b394e;
       color: #fff;
-      padding: 4px;
+      padding: 3px;
       border-radius: 4px;
-      font-size: 10px;
+      font-size: 9.5px;
     }
     .main-tabs {
-      height: 50px;
+      height: 48px;
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -156,9 +158,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 800;
-      gap: 2px;
+      gap: 1px;
       cursor: pointer;
     }
     .tab-btn.active {
@@ -167,7 +169,7 @@
       background: #151d2a;
     }
 
-    /* পপআপ মডাল */
+    /* টেক্সট এডিটর মডাল */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -180,22 +182,22 @@
     }
     .modal-card {
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       background: #161e2e;
       border: 1px solid #2b3a54;
       border-radius: 12px;
-      padding: 14px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
     textarea {
       width: 100%;
-      height: 140px;
+      height: 130px;
       background: #090d14;
       border: 1px solid #25334a;
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px;
       color: #fff;
       font-size: 12px;
       resize: none;
@@ -204,52 +206,49 @@
 </head>
 <body>
 
-  <!-- টপবার -->
-  <div class="top-bar">
-    <div class="top-icons">
-      <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
-      <label class="top-btn" title="Add Any Image">
-        ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
-      </label>
-      <button class="top-btn" onclick="deleteImage()" title="Delete Image">🗑️</button>
-      <button class="top-btn" onclick="restoreOriginalImage()" title="Restore/Reset">↺</button>
-      <button class="top-btn" id="btnCompare" title="Hold for Before/After">👁️</button>
+  <div class="app-root">
+    <div class="top-bar">
+      <div class="top-icons">
+        <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
+        <label class="top-btn" title="Add Image">
+          ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
+        </label>
+        <button class="top-btn" onclick="deleteImage()" title="Delete Image">🗑️</button>
+        <button class="top-btn" onclick="restoreOriginalImage()" title="Restore/Reset">↺</button>
+        <button class="top-btn" id="btnCompare" title="Before/After Compare">👁️</button>
+      </div>
+      <div class="top-icons">
+        <button class="top-btn" onclick="downloadTransparentPNG()" title="Download Transparent PNG">📥 PNG</button>
+        <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
+      </div>
     </div>
-    <div class="top-icons">
-      <button class="btn-install" id="pwaInstallBtn" onclick="installAppDirect()">📲 INSTALL APP</button>
-      <button class="top-btn" onclick="downloadTransparentPNG()" title="Download Transparent PNG">📥 PNG</button>
-      <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
+
+    <div class="workspace">
+      <div class="canvas-container" id="canvasBox">
+        <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
+      </div>
+    </div>
+
+    <div class="bottom-panel">
+      <div class="sub-tools" id="subToolsBar"></div>
+      <div class="main-tabs">
+        <button class="tab-btn active" onclick="switchTab('text')">🔤 Text</button>
+        <button class="tab-btn" onclick="switchTab('image')">🖼️ Image</button>
+        <button class="tab-btn" onclick="switchTab('crop')">✂️ Crop/Cut</button>
+        <button class="tab-btn" onclick="switchTab('filter')">🪄 Filter</button>
+        <button class="tab-btn" onclick="switchTab('font')">🗚 Fonts</button>
+        <button class="tab-btn" onclick="switchTab('motion')">🎬 Motion</button>
+      </div>
     </div>
   </div>
 
-  <!-- ক্যানভাস ভিউয়ার -->
-  <div class="workspace">
-    <div class="canvas-container" id="canvasBox">
-      <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
-    </div>
-  </div>
-
-  <!-- বটম কন্ট্রোল টুলবার -->
-  <div class="bottom-panel">
-    <div class="sub-tools" id="subToolsBar"></div>
-    <div class="main-tabs">
-      <button class="tab-btn active" onclick="switchTab('text')">🔤 Text</button>
-      <button class="tab-btn" onclick="switchTab('image')">🖼️ Image</button>
-      <button class="tab-btn" onclick="switchTab('crop')">✂️ Crop/Cut</button>
-      <button class="tab-btn" onclick="switchTab('filter')">🪄 Filter</button>
-      <button class="tab-btn" onclick="switchTab('font')">🗚 Fonts</button>
-      <button class="tab-btn" onclick="switchTab('motion')">🎬 Motion</button>
-    </div>
-  </div>
-
-  <!-- টেক্সট মডাল -->
   <div class="modal-overlay" id="textModal">
     <div class="modal-card">
-      <span style="font-size:12px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (700-1000 WORDS SUPPORTED)</span>
+      <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (AUTO SAVED)</span>
       <textarea id="modalScriptInput">In 1988, Dave Grohl was broke, sleeping on floors in Virginia and playing drums for bands that barely paid. Tommy drove him to 86 gigs in an old truck with a cracked windshield. In 2011, Grohl bought back the truck and gave Tommy a $28,000 cheque.</textarea>
       <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button onclick="closeTextEditor(false)" style="padding:7px 14px; background:#334155; border:none; border-radius:6px; color:#fff;">Cancel</button>
-        <button onclick="closeTextEditor(true)" style="padding:7px 14px; background:#0ea5e9; border:none; border-radius:6px; color:#fff;">Done</button>
+        <button onclick="closeTextEditor(false)" style="padding:6px 12px; background:#334155; border:none; border-radius:6px; color:#fff; font-size:11px;">Cancel</button>
+        <button onclick="closeTextEditor(true)" style="padding:6px 12px; background:#0ea5e9; border:none; border-radius:6px; color:#fff; font-size:11px;">Done</button>
       </div>
     </div>
   </div>
@@ -259,7 +258,7 @@
     const ctx = canvas.getContext('2d');
     let currentTab = 'text';
 
-    // ইমেজ অবজেক্ট স্টেট
+    // স্টেট অবজেক্ট
     let originalImg = null; 
     let loadedImg = null;
     let showBeforeComparison = false;
@@ -270,7 +269,6 @@
       mask: 'none', filter: 'hdr'
     };
 
-    // টেক্সট অবজেক্ট স্টেট
     let textState = {
       x: 50, y: 920, w: 980, h: 900,
       fontSize: 32, stroke: 10,
@@ -283,105 +281,128 @@
     let motionState = { type: 'zoomIn', duration: 10 };
     let activeSelection = 'text';
 
-    // মাল্টি-টাচ ও পিঞ্চ-জুম ভ্যারিয়েবল
-    let isInteracting = false;
-    let isPinching = false;
-    let touchStartDist = 0;
-    let initialScale = 1.0;
-    let dragStartX = 0, dragStartY = 0;
+    // ১. অটো-সেভ ও মেমোরি রিস্টোর ফাংশন (State Persistence)
+    function saveProjectState() {
+      const stateToSave = {
+        imgState: imgState,
+        textState: textState,
+        motionState: motionState,
+        currentTab: currentTab
+      };
+      localStorage.setItem('pixelLabStudioState', JSON.stringify(stateToSave));
+    }
 
-    // বটম সাব-টুলস রেন্ডার
+    function loadProjectState() {
+      const saved = localStorage.getItem('pixelLabStudioState');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.textState) textState = Object.assign(textState, parsed.textState);
+          if (parsed.imgState) imgState = Object.assign(imgState, parsed.imgState);
+          if (parsed.motionState) motionState = Object.assign(motionState, parsed.motionState);
+          if (parsed.currentTab) currentTab = parsed.currentTab;
+          document.getElementById('modalScriptInput').value = textState.rawText;
+        } catch(e) {}
+      }
+      // সেভ করা ছবি থাকলে লোড করা
+      const savedImgData = localStorage.getItem('pixelLabSavedImg');
+      if (savedImgData) {
+        const img = new Image();
+        img.onload = () => {
+          originalImg = img;
+          loadedImg = img;
+          draw();
+        };
+        img.src = savedImgData;
+      }
+    }
+
+    // ২. বটম সাব-টুলস রেন্ডারিং
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
         bar.innerHTML = `
-          <div class="tool-item"><label>SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw();"></div>
-          <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw();"></div>
+          <div class="tool-item"><label>SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw(); saveProjectState();"></div>
           <div class="tool-item"><label>ALIGN</label>
-            <select onchange="textState.align=this.value; draw();">
+            <select onchange="textState.align=this.value; draw(); saveProjectState();">
               <option value="left" ${textState.align==='left'?'selected':''}>Left</option>
               <option value="center" ${textState.align==='center'?'selected':''}>Center</option>
               <option value="right" ${textState.align==='right'?'selected':''}>Right</option>
             </select>
           </div>
-          <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw();"></div>
+          <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw(); saveProjectState();"></div>
         `;
       } else if (currentTab === 'image') {
         bar.innerHTML = `
-          <div class="tool-item"><label>ZOOM/SCALE</label><input type="range" min="0.2" max="4.0" step="0.05" value="${imgState.scale}" oninput="imgState.scale=parseFloat(this.value); draw();"></div>
-          <div class="tool-item"><label>MOVE X</label><input type="range" min="-800" max="800" value="${imgState.x}" oninput="imgState.x=parseInt(this.value); draw();"></div>
-          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-800" max="1000" value="${imgState.y}" oninput="imgState.y=parseInt(this.value); draw();"></div>
+          <div class="tool-item"><label>ZOOM/SCALE</label><input type="range" min="0.2" max="4.0" step="0.05" value="${imgState.scale}" oninput="imgState.scale=parseFloat(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE X</label><input type="range" min="-800" max="800" value="${imgState.x}" oninput="imgState.x=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-800" max="1000" value="${imgState.y}" oninput="imgState.y=parseInt(this.value); draw(); saveProjectState();"></div>
         `;
       } else if (currentTab === 'crop') {
         bar.innerHTML = `
           <div class="tool-item"><label>ASPECT RATIO</label>
             <select onchange="applyCropRatio(this.value)">
-              <option value="none">Original (No Crop)</option>
+              <option value="none">Original</option>
               <option value="9:16">9:16 Shorts</option>
               <option value="1:1">1:1 Square</option>
-              <option value="4:5">4:5 Instagram</option>
-              <option value="16:9">16:9 Landscape</option>
-              <option value="free">Custom Box Crop</option>
+              <option value="4:5">4:5 Insta</option>
+              <option value="16:9">16:9 Wide</option>
             </select>
           </div>
           <div class="tool-item"><label>MASK EFFECT</label>
-            <select onchange="imgState.mask=this.value; draw();">
-              <option value="none">None</option>
-              <option value="circle">Circle Mask</option>
-              <option value="rounded">Rounded Corner</option>
-              <option value="fadeBottom">Cinematic Bottom Fade</option>
+            <select onchange="imgState.mask=this.value; draw(); saveProjectState();">
+              <option value="none" ${imgState.mask==='none'?'selected':''}>None</option>
+              <option value="circle" ${imgState.mask==='circle'?'selected':''}>Circle</option>
+              <option value="rounded" ${imgState.mask==='rounded'?'selected':''}>Rounded</option>
+              <option value="fadeBottom" ${imgState.mask==='fadeBottom'?'selected':''}>Fade Bottom</option>
             </select>
           </div>
         `;
       } else if (currentTab === 'filter') {
         bar.innerHTML = `
           <div class="tool-item"><label>SMART FILTER</label>
-            <select onchange="imgState.filter=this.value; draw();">
-              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR (Auto)</option>
-              <option value="warm" ${imgState.filter==='warm'?'selected':''}>Warm Hollywood</option>
-              <option value="cool" ${imgState.filter==='cool'?'selected':''}>Moody Blue</option>
+            <select onchange="imgState.filter=this.value; draw(); saveProjectState();">
+              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR</option>
+              <option value="warm" ${imgState.filter==='warm'?'selected':''}>Warm Glow</option>
+              <option value="cool" ${imgState.filter==='cool'?'selected':''}>Cool Blue</option>
               <option value="cyber" ${imgState.filter==='cyber'?'selected':''}>Cyberpunk</option>
               <option value="bw" ${imgState.filter==='bw'?'selected':''}>Noir B&W</option>
-              <option value="none" ${imgState.filter==='none'?'selected':''}>Original (No Filter)</option>
+              <option value="none" ${imgState.filter==='none'?'selected':''}>Original</option>
             </select>
           </div>
         `;
       } else if (currentTab === 'font') {
         bar.innerHTML = `
-          <div class="tool-item"><label>VIRAL GOOGLE FONTS</label>
-            <select onchange="textState.font=this.value; draw();">
+          <div class="tool-item"><label>FONT FAMILY</label>
+            <select onchange="textState.font=this.value; draw(); saveProjectState();">
               <option value="'Montserrat', sans-serif">Montserrat Black</option>
-              <option value="'Anton', sans-serif">Anton Impact</option>
+              <option value="'Anton', sans-serif">Anton</option>
               <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
-              <option value="'League Spartan', sans-serif">League Spartan</option>
-              <option value="'Poppins', sans-serif">Poppins Heavy</option>
-              <option value="'Oswald', sans-serif">Oswald Bold</option>
-              <option value="'Cinzel', serif">Cinzel Cinematic</option>
-              <option value="'Impact', sans-serif">Impact Classic</option>
-              <option value="'Teko', sans-serif">Teko Tall</option>
-              <option value="'Playfair Display', serif">Playfair Luxury</option>
-              <option value="'Rubik', sans-serif">Rubik Black</option>
+              <option value="'League Spartan', sans-serif">Spartan</option>
+              <option value="'Poppins', sans-serif">Poppins</option>
+              <option value="'Oswald', sans-serif">Oswald</option>
+              <option value="'Cinzel', serif">Cinzel</option>
+              <option value="'Impact', sans-serif">Impact</option>
+              <option value="'Teko', sans-serif">Teko</option>
+              <option value="'Rubik', sans-serif">Rubik</option>
             </select>
-          </div>
-          <div class="tool-item"><label>PHONE CUSTOM FONT</label>
-            <input type="file" id="customFontLoader" accept=".ttf,.otf,.woff" onchange="loadCustomPhoneFont(event)">
           </div>
         `;
       } else if (currentTab === 'motion') {
         bar.innerHTML = `
           <div class="tool-item"><label>CAMERA MOTION</label>
-            <select onchange="motionState.type=this.value;">
-              <option value="zoomIn">Slow Zoom In</option>
-              <option value="zoomOut">Slow Zoom Out</option>
-              <option value="none">Static</option>
+            <select onchange="motionState.type=this.value; saveProjectState();">
+              <option value="zoomIn" ${motionState.type==='zoomIn'?'selected':''}>Zoom In</option>
+              <option value="zoomOut" ${motionState.type==='zoomOut'?'selected':''}>Zoom Out</option>
+              <option value="none" ${motionState.type==='none'?'selected':''}>Static</option>
             </select>
           </div>
           <div class="tool-item"><label>DURATION</label>
-            <select onchange="motionState.duration=parseInt(this.value);">
-              <option value="10">10s</option>
-              <option value="12">12s</option>
-              <option value="15">15s</option>
-              <option value="20">20s</option>
+            <select onchange="motionState.duration=parseInt(this.value); saveProjectState();">
+              <option value="10" ${motionState.duration===10?'selected':''}>10s</option>
+              <option value="12" ${motionState.duration===12?'selected':''}>12s</option>
+              <option value="15" ${motionState.duration===15?'selected':''}>15s</option>
             </select>
           </div>
         `;
@@ -392,12 +413,14 @@
       currentTab = tab;
       activeSelection = (tab === 'image' || tab === 'crop' || tab === 'filter') ? 'image' : 'text';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(tab));
+      if (activeBtn) activeBtn.classList.add('active');
       renderSubTools();
       draw();
+      saveProjectState();
     }
 
-    // ১. যেকোনো ফরম্যাটের ইমেজ আপলোড হ্যান্ডলার
+    // ইমেজ আপলোড
     document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -412,6 +435,9 @@
             imgState.cropW = img.width; imgState.cropH = img.height;
             switchTab('image');
             draw();
+            saveProjectState();
+            // ইমেজ স্টোরেজে ক্যাশ করা
+            try { localStorage.setItem('pixelLabSavedImg', evt.target.result); } catch(err){}
           };
           img.src = evt.target.result;
         };
@@ -419,7 +445,6 @@
       }
     });
 
-    // ২. ইমেজ ক্রপ লজিক
     function applyCropRatio(ratio) {
       if (!loadedImg) return;
       let w = originalImg.width, h = originalImg.height;
@@ -435,21 +460,20 @@
       } else if (ratio === '16:9') {
         let ch = Math.min(h, w * (9/16));
         imgState.cropW = ch * (16/9); imgState.cropH = ch;
-      } else if (ratio === 'free') {
-        imgState.cropW = w * 0.8; imgState.cropH = h * 0.8;
       } else {
         imgState.cropW = w; imgState.cropH = h;
       }
       imgState.cropX = (w - imgState.cropW) / 2;
       imgState.cropY = (h - imgState.cropH) / 2;
       draw();
+      saveProjectState();
     }
 
-    // ৩. ডিলিট, রিস্টোর এবং আফটার-বিফোর কম্পেয়ার
     function deleteImage() {
-      loadedImg = null;
-      originalImg = null;
+      loadedImg = null; originalImg = null;
+      localStorage.removeItem('pixelLabSavedImg');
       draw();
+      saveProjectState();
     }
 
     function restoreOriginalImage() {
@@ -458,9 +482,9 @@
         imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
         imgState.cropX = 0; imgState.cropY = 0;
         imgState.cropW = originalImg.width; imgState.cropH = originalImg.height;
-        imgState.mask = 'none';
-        imgState.filter = 'hdr';
+        imgState.mask = 'none'; imgState.filter = 'hdr';
         draw();
+        saveProjectState();
       }
     }
 
@@ -468,26 +492,11 @@
     btnCompare.addEventListener('pointerdown', () => { showBeforeComparison = true; draw(); });
     window.addEventListener('pointerup', () => { if (showBeforeComparison) { showBeforeComparison = false; draw(); } });
 
-    // ৪. কাস্টম ফোন ফন্ট লোডার
-    function loadCustomPhoneFont(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const fontName = 'CustomFont_' + Date.now();
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const font = new FontFace(fontName, e.target.result);
-          font.load().then(loadedFace => {
-            document.fonts.add(loadedFace);
-            textState.font = `'${fontName}', sans-serif`;
-            draw();
-          });
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    }
-
-    // ৫. দুই আঙুলে পিঞ্চ-জুম এবং টাচ ড্র্যাগ হ্যান্ডলার
+    // টাচ ও পিঞ্চ জুম
     const canvasBox = document.getElementById('canvasBox');
+    let isInteracting = false, isPinching = false;
+    let touchStartDist = 0, initialScale = 1.0;
+    let dragStartX = 0, dragStartY = 0;
 
     function getCoords(e) {
       const rect = canvas.getBoundingClientRect();
@@ -501,12 +510,8 @@
 
     canvasBox.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
-        // পিঞ্চ জুম শুরু
         isPinching = true;
-        touchStartDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
+        touchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         initialScale = imgState.scale;
       } else if (e.touches.length === 1) {
         const p = getCoords(e);
@@ -517,10 +522,7 @@
 
     window.addEventListener('touchmove', (e) => {
       if (isPinching && e.touches.length === 2) {
-        const dist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         imgState.scale = Math.max(0.2, Math.min(4.0, initialScale * (dist / touchStartDist)));
         draw();
         e.preventDefault();
@@ -528,12 +530,8 @@
         const p = getCoords(e);
         const dx = p.x - dragStartX;
         const dy = p.y - dragStartY;
-
-        if (activeSelection === 'text') {
-          textState.x += dx; textState.y += dy;
-        } else {
-          imgState.x += dx; imgState.y += dy;
-        }
+        if (activeSelection === 'text') { textState.x += dx; textState.y += dy; }
+        else { imgState.x += dx; imgState.y += dy; }
         dragStartX = p.x; dragStartY = p.y;
         draw();
         e.preventDefault();
@@ -541,27 +539,10 @@
     }, { passive: false });
 
     window.addEventListener('touchend', () => {
+      if (isInteracting || isPinching) saveProjectState();
       isInteracting = false;
       isPinching = false;
     });
-
-    // মাউস ড্র্যাগ (পিসির জন্য)
-    canvasBox.addEventListener('mousedown', (e) => {
-      const p = getCoords(e);
-      dragStartX = p.x; dragStartY = p.y;
-      isInteracting = true;
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (!isInteracting) return;
-      const p = getCoords(e);
-      const dx = p.x - dragStartX;
-      const dy = p.y - dragStartY;
-      if (activeSelection === 'text') { textState.x += dx; textState.y += dy; }
-      else { imgState.x += dx; imgState.y += dy; }
-      dragStartX = p.x; dragStartY = p.y;
-      draw();
-    });
-    window.addEventListener('mouseup', () => { isInteracting = false; });
 
     // টেক্সট এডিটর
     function openTextEditor() {
@@ -572,17 +553,16 @@
       if (save) {
         textState.rawText = document.getElementById('modalScriptInput').value;
         draw();
+        saveProjectState();
       }
       document.getElementById('textModal').style.display = 'none';
     }
 
-    // স্মার্ট কালার পার্সিং
     function parseStoryWords(text) {
       const isUpper = textState.case === 'uppercase';
       let cleanText = isUpper ? text.toUpperCase() : text;
       const words = cleanText.trim().split(/\s+/);
       const ignore = ['THE','AND','FOR','WAS','HIS','HER','WITH','FROM','THAT','THEN','WHEN','THEY','THIS','INTO','OVER'];
-
       return words.map(w => {
         let clean = w.replace(/[^a-zA-Z0-9$]/g, '');
         let col = textState.colorDefault;
@@ -593,7 +573,7 @@
     }
 
     function getFilterCSS() {
-      if (showBeforeComparison) return 'none'; // আফটার-বিফোর কম্পেয়ার
+      if (showBeforeComparison) return 'none';
       switch (imgState.filter) {
         case 'hdr': return 'contrast(130%) saturate(140%) brightness(105%)';
         case 'warm': return 'sepia(30%) saturate(140%) contrast(115%) brightness(105%)';
@@ -604,11 +584,11 @@
       }
     }
 
-    // ক্যানভাস রেন্ডারিং
+    // ড্রয়িং ইঞ্জিন
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ১. ব্যাকগ্রাউন্ড ইমেজ, ক্রপ এবং মাস্কিং
+      // ১. ইমেজ ড্রয়িং
       if (loadedImg) {
         ctx.save();
         if (imgState.mask === 'circle') {
@@ -622,10 +602,8 @@
         }
 
         ctx.filter = getFilterCSS();
-
         let sx = imgState.cropX, sy = imgState.cropY;
         let sw = imgState.cropW, sh = imgState.cropH;
-
         let dw = canvas.width * imgState.scale * scaleMotion;
         let dh = (sh / sw) * dw;
         let dx = (canvas.width - dw) / 2 + imgState.x;
@@ -654,7 +632,7 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // ৩. টাইপোগ্রাফি
+      // ৩. টেক্সট ড্রয়িং
       const fSize = textState.fontSize;
       const sWidth = textState.stroke;
       const words = parseStoryWords(textState.rawText);
@@ -666,10 +644,7 @@
       const maxW = textState.w - (padX * 2);
       const lineH = fSize * 1.5;
 
-      let lines = [];
-      let curLine = [];
-      let curLineWidth = 0;
-
+      let lines = [], curLine = [], curLineWidth = 0;
       words.forEach(item => {
         const wStr = item.text + ' ';
         const wWidth = ctx.measureText(wStr).width;
@@ -711,7 +686,6 @@
       });
       ctx.shadowBlur = 0;
 
-      // ৪. সিলেকশন ইন্ডিকেটর
       if (renderUI && activeSelection === 'text') {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2;
@@ -721,7 +695,6 @@
       }
     }
 
-    // পিএনজি এক্সপোর্ট
     function downloadTransparentPNG() {
       draw(1.0, 0, false);
       const a = document.createElement('a');
@@ -731,7 +704,6 @@
       draw();
     }
 
-    // মোশন ভিডিও রেন্ডার
     async function renderMotionVideo() {
       if (!loadedImg) {
         alert("অনুগ্রহ করে ➕ চেপে ছবি আপলোড করুন!");
@@ -739,7 +711,7 @@
       }
       const btn = document.getElementById('renderBtn');
       btn.disabled = true;
-      btn.innerText = "RENDERING...";
+      btn.innerText = "...";
 
       const duration = motionState.duration;
       const fps = 30;
@@ -780,26 +752,8 @@
       recorder.stop();
     }
 
-    // ৬. ডিরেক্ট অ্যাপ ইনস্টল হ্যান্ডলার (PWA Prompt)
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.getElementById('pwaInstallBtn');
-      if (installBtn) installBtn.style.display = 'block';
-    });
-
-    function installAppDirect() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          document.getElementById('pwaInstallBtn').style.display = 'none';
-        });
-      }
-    }
-
     window.onload = () => {
+      loadProjectState();
       renderSubTools();
       draw();
     };
