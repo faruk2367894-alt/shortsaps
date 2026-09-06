@@ -1,710 +1,321 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#181e28">
-  <title>PixelLab Shorts Studio Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700;900&family=League+Spartan:wght@800;900&family=Montserrat:wght@800;900&family=Oswald:wght@700&family=Poppins:wght@800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Photo Text Editor</title>
+  
+  <!-- Cropper.js & Panzoom Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Montserrat', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    body {
-      background: #11141b;
-      color: #e2e8f0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    /* ১. পিক্সেলল্যাব টপ বার */
-    .top-bar {
-      height: 48px;
-      background: #181f2c;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px;
-      border-bottom: 1px solid #232d3f;
-      z-index: 10;
-    }
-    .top-icons {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .top-btn {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px;
-    }
-    .top-btn:active { color: #38bdf8; }
-    .btn-save-tag {
-      background: #0ea5e9;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #121212; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    /* ২. মূল ক্যানভাস ওয়ার্কস্পেস */
-    .workspace {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0a0d14;
-      overflow: hidden;
-    }
-    .canvas-container {
-      height: 94%;
-      aspect-ratio: 9 / 16;
-      background: repeating-conic-gradient(#1a202c 0% 25%, #111622 0% 50%) 50% / 16px 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      position: relative;
-      border: 1px solid #2b384e;
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      touch-action: none;
-    }
+    /* টুলবার */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #1e1e1e; z-index: 10; justify-content: center; }
+    button, label.btn { background: #333; color: #fff; border: 1px solid #555; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+    button:active, label.btn:active { background: #555; }
+    input[type="file"] { display: none; }
 
-    /* ৩. বটম কন্ট্রোল প্যানেল */
-    .bottom-panel {
-      background: #151b26;
-      border-top: 1px solid #232d3f;
-      display: flex;
-      flex-direction: column;
-      z-index: 10;
-    }
+    /* স্ট্যাটাস ইন্ডিকেটর */
+    #save-status { position: absolute; top: 50px; right: 10px; font-size: 11px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 12px; z-index: 20; color: #4caf50; display: none; }
 
-    /* সাব-টুলস স্লাইডার কন্টেইনার */
-    .sub-tools {
-      padding: 8px 10px;
-      overflow-x: auto;
-      white-space: nowrap;
-      display: flex;
-      gap: 10px;
-      background: #18202d;
-      border-bottom: 1px solid #20293a;
-    }
-    .sub-tools::-webkit-scrollbar { display: none; }
-    .tool-item {
-      display: inline-flex;
-      flex-direction: column;
-      gap: 3px;
-      font-size: 10px;
-      color: #94a3b8;
-    }
-    .tool-item input[type="range"] {
-      width: 85px;
-      accent-color: #38bdf8;
-    }
-    .tool-item select, .tool-item input[type="color"] {
-      background: #0d121a;
-      border: 1px solid #2d3b52;
-      color: #fff;
-      padding: 4px;
-      border-radius: 4px;
-      font-size: 10px;
-    }
+    /* ওয়ার্কস্পেস */
+    .workspace { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; touch-action: none; }
+    #panzoom-container { display: inline-block; position: relative; }
+    #image { max-width: 90vw; max-height: 70vh; display: block; }
 
-    /* বটম ক্যাটাগরি মেনু (PixelLab Icons) */
-    .main-tabs {
-      height: 52px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      background: #111622;
+    /* টেক্সট ওভারলে (কালো বক্স + হলুদ/সাদা টেক্সট) */
+    .text-overlay {
+      position: absolute;
+      bottom: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85%;
+      text-align: center;
+      line-height: 1.4;
+      pointer-events: auto;
     }
-    .tab-btn {
-      flex: 1;
-      height: 100%;
-      background: transparent;
-      border: none;
-      color: #64748b;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 700;
-      gap: 3px;
-      cursor: pointer;
+    .text-overlay span {
+      background: #000;
+      padding: 2px 6px;
+      font-weight: 900;
+      font-size: 18px;
+      border-radius: 3px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
     }
-    .tab-btn.active {
-      color: #38bdf8;
-      border-top: 2px solid #38bdf8;
-      background: #171e2c;
-    }
+    .c-white { color: #ffffff; }
+    .c-yellow { color: #ffd700; }
 
-    /* টেক্সট এডিটিং ডায়ালগ */
-    #textModal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 20px;
-    }
-    .modal-box {
-      width: 100%;
-      max-width: 400px;
-      background: #161e2e;
-      border: 1px solid #2e3e5c;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    textarea {
-      width: 100%;
-      height: 140px;
-      background: #0a0d14;
-      border: 1px solid #2d3b52;
-      border-radius: 8px;
-      padding: 10px;
-      color: #fff;
-      font-size: 12px;
-      resize: none;
-    }
+    /* কন্ট্রোল প্যানেল */
+    .controls { padding: 10px; background: #1e1e1e; display: flex; flex-direction: column; gap: 8px; }
+    .text-input-area { display: flex; gap: 6px; }
+    input[type="text"], select { flex: 1; padding: 6px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <div class="top-icons">
-      <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
-      <label class="top-btn" title="Add Image">
-        ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
+  <div id="save-status">✓ সংরক্ষিত হয়েছে</div>
+
+  <!-- শীর্ষ টুলবার -->
+  <div class="toolbar">
+    <label class="btn">📂 নতুন ইমেজ <input type="file" id="file-input" accept="image/*"></label>
+    <button onclick="startCrop('free')">কাস্টম Crop</button>
+    <button onclick="startCrop(9/16)">9:16 Crop</button>
+    <button onclick="startCrop(1)">1:1 Crop</button>
+    <button onclick="applyCrop()" id="crop-apply-btn" style="display:none; background:#2e7d32;">Apply Crop</button>
+    <button onclick="deleteImage()">🗑️ ডিলিট</button>
+    <button onclick="restoreImage()">↩️ রিস্টোর</button>
+    <button onclick="resetZoom()">🔍 জুম রিসেট</button>
+    <button onclick="clearAllData()" style="background:#b71c1c;">সব ক্লিয়ার</button>
+  </div>
+
+  <!-- ইমেজ ওয়ার্কস্পেস (Pinch-to-zoom সহ) -->
+  <div class="workspace" id="workspace">
+    <div id="panzoom-container">
+      <img id="image" src="" style="display:none;" alt="Workspace Image">
+      <div id="text-display" class="text-overlay"></div>
+    </div>
+  </div>
+
+  <!-- টেক্সট ও ফন্ট কন্ট্রোল -->
+  <div class="controls">
+    <div class="text-input-area">
+      <input type="text" id="text-input" placeholder="হাইলাইট করতে ব্র্যাকেট দিন: [HE GOT] HURT" oninput="updateText()">
+      <button onclick="updateText()">সেট করুন</button>
+    </div>
+    <div style="display: flex; gap: 6px;">
+      <select id="font-select" onchange="changeFont(this.value)">
+        <option value="Impact">Impact (Heavy Bold)</option>
+        <option value="Arial Black">Arial Black</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="sans-serif">System Sans-Serif</option>
+        <option value="serif">System Serif</option>
+        <option value="monospace">System Monospace</option>
+      </select>
+      <label class="btn" style="flex: 1; text-align: center;">
+        ➕ নিজস্ব ফন্ট (.ttf/.otf) <input type="file" id="font-input" accept=".ttf,.otf,.woff,.woff2" onchange="loadCustomFont(event)">
       </label>
-      <button class="top-btn" onclick="resetTransforms()" title="Reset">↺</button>
-    </div>
-    <div class="top-icons">
-      <button class="top-btn" onclick="downloadTransparentPNG()" title="Transparent PNG">📥 PNG</button>
-      <button class="btn-save-tag" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
-    </div>
-  </div>
-
-  <div class="workspace">
-    <div class="canvas-container" id="canvasContainer">
-      <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
-    </div>
-  </div>
-
-  <div class="bottom-panel">
-    <div class="sub-tools" id="subToolsBar">
-      </div>
-
-    <div class="main-tabs">
-      <button class="tab-btn active" onclick="switchTab('text')">🔤 Text</button>
-      <button class="tab-btn" onclick="switchTab('image')">🖼️ Image</button>
-      <button class="tab-btn" onclick="switchTab('crop')">✂️ Crop/Mask</button>
-      <button class="tab-btn" onclick="switchTab('filter')">🪄 Filter</button>
-      <button class="tab-btn" onclick="switchTab('motion')">🎬 Motion</button>
-    </div>
-  </div>
-
-  <div id="textModal">
-    <div class="modal-box">
-      <span style="font-size:12px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (700-1000 WORDS)</span>
-      <textarea id="modalScriptInput">In 1988, Dave Grohl was completely broke, sleeping on floors in Virginia and playing drums for bands that barely paid. His neighbor Tommy, a retired electrician living on $1,100 a month, drove Grohl to 86 gigs in an old truck with a cracked windshield. In 2011, Grohl bought the truck back for Tommy and enclosed a check for $28,000.</textarea>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button onclick="closeTextEditor(false)" style="padding:6px 14px; background:#334155; border:none; border-radius:6px; color:#fff;">Cancel</button>
-        <button onclick="closeTextEditor(true)" style="padding:6px 14px; background:#0ea5e9; border:none; border-radius:6px; color:#fff;">Done</button>
-      </div>
     </div>
   </div>
 
   <script>
-    const canvas = document.getElementById('shortsCanvas');
-    const ctx = canvas.getContext('2d');
-    let loadedImg = null;
-    let currentTab = 'text';
+    let cropper = null;
+    let panzoomInstance = null;
+    let originalImageSrc = '';
+    let currentImageSrc = '';
 
-    // স্টেট অবজেক্ট
-    let activeSelection = 'text'; // 'text' অথবা 'image'
-    
-    let textState = {
-      x: 50, y: 920, w: 980, h: 900,
-      fontSize: 32, stroke: 10,
-      font: "'Montserrat', sans-serif",
-      align: 'left',
-      case: 'uppercase',
-      colorDefault: '#FFFFFF',
-      colorNum: '#FFEA00',
-      colorName: '#38BDF8',
-      rawText: document.getElementById('modalScriptInput').value
-    };
+    const imageElement = document.getElementById('image');
+    const panzoomContainer = document.getElementById('panzoom-container');
+    const textInputElement = document.getElementById('text-input');
+    const fontSelectElement = document.getElementById('font-select');
+    const saveStatusElement = document.getElementById('save-status');
 
-    let imgState = {
-      x: 0, y: 0, scale: 1.0,
-      mask: 'fadeBottom',
-      filter: 'hdr',
-      cropRatio: 'cover'
-    };
+    // --- অটো-সেভ ইঞ্জিন (IndexedDB দিয়ে হাই-কোয়ালিটি ইমেজ স্টোরেজ) ---
+    const DB_NAME = 'PhotoEditorDB';
+    const STORE_NAME = 'editorState';
 
-    let motionState = { type: 'zoomIn', duration: 10 };
-
-    // ট্রান্সফর্ম ড্র্যাগ স্টেট
-    let isDragging = false;
-    let isResizing = false;
-    let dragStartX = 0, dragStartY = 0;
-
-    // পিক্সেলল্যাব মেনু সাব-টুলবার
-    function renderSubTools() {
-      const bar = document.getElementById('subToolsBar');
-      if (currentTab === 'text') {
-        bar.innerHTML = `
-          <div class="tool-item">
-            <label>FONT SIZE</label>
-            <input type="range" min="18" max="55" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw();">
-          </div>
-          <div class="tool-item">
-            <label>OUTLINE</label>
-            <input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw();">
-          </div>
-          <div class="tool-item">
-            <label>ALIGN</label>
-            <select onchange="textState.align=this.value; draw();">
-              <option value="left" ${textState.align==='left'?'selected':''}>Left</option>
-              <option value="center" ${textState.align==='center'?'selected':''}>Center</option>
-              <option value="right" ${textState.align==='right'?'selected':''}>Right</option>
-            </select>
-          </div>
-          <div class="tool-item">
-            <label>FONTS</label>
-            <select onchange="textState.font=this.value; draw();">
-              <option value="'Montserrat', sans-serif">Montserrat</option>
-              <option value="'League Spartan', sans-serif">Spartan</option>
-              <option value="'Anton', sans-serif">Anton</option>
-              <option value="'Bebas Neue', sans-serif">Bebas</option>
-              <option value="'Poppins', sans-serif">Poppins</option>
-              <option value="'Cinzel', serif">Cinzel</option>
-            </select>
-          </div>
-          <div class="tool-item">
-            <label>HIGHLIGHT</label>
-            <input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw();">
-          </div>
-        `;
-      } else if (currentTab === 'image') {
-        bar.innerHTML = `
-          <div class="tool-item">
-            <label>IMG SCALE</label>
-            <input type="range" min="0.5" max="2.5" step="0.05" value="${imgState.scale}" oninput="imgState.scale=parseFloat(this.value); draw();">
-          </div>
-          <div class="tool-item">
-            <label>POS X</label>
-            <input type="range" min="-500" max="500" value="${imgState.x}" oninput="imgState.x=parseInt(this.value); draw();">
-          </div>
-          <div class="tool-item">
-            <label>POS Y</label>
-            <input type="range" min="-500" max="800" value="${imgState.y}" oninput="imgState.y=parseInt(this.value); draw();">
-          </div>
-        `;
-      } else if (currentTab === 'crop') {
-        bar.innerHTML = `
-          <div class="tool-item">
-            <label>CROP FORMAT</label>
-            <select onchange="imgState.cropRatio=this.value; draw();">
-              <option value="cover">9:16 Shorts</option>
-              <option value="1:1">1:1 Square</option>
-              <option value="4:5">4:5 Portrait</option>
-            </select>
-          </div>
-          <div class="tool-item">
-            <label>MASK STYLE</label>
-            <select onchange="imgState.mask=this.value; draw();">
-              <option value="fadeBottom" ${imgState.mask==='fadeBottom'?'selected':''}>Cinematic Fade</option>
-              <option value="circle" ${imgState.mask==='circle'?'selected':''}>Circle Mask</option>
-              <option value="rounded" ${imgState.mask==='rounded'?'selected':''}>Rounded Box</option>
-              <option value="none" ${imgState.mask==='none'?'selected':''}>No Mask</option>
-            </select>
-          </div>
-        `;
-      } else if (currentTab === 'filter') {
-        bar.innerHTML = `
-          <div class="tool-item">
-            <label>AUTO ENHANCE</label>
-            <select onchange="imgState.filter=this.value; draw();">
-              <option value="hdr">Vibrant HDR (Auto)</option>
-              <option value="warm">Warm Hollywood</option>
-              <option value="cool">Moody Blue</option>
-              <option value="cyber">Cyberpunk Punch</option>
-              <option value="bw">Noir B&W</option>
-              <option value="none">Original</option>
-            </select>
-          </div>
-        `;
-      } else if (currentTab === 'motion') {
-        bar.innerHTML = `
-          <div class="tool-item">
-            <label>CAMERA MOTION</label>
-            <select onchange="motionState.type=this.value;">
-              <option value="zoomIn">Slow Zoom In</option>
-              <option value="zoomOut">Slow Zoom Out</option>
-              <option value="none">Static</option>
-            </select>
-          </div>
-          <div class="tool-item">
-            <label>DURATION (SEC)</label>
-            <select onchange="motionState.duration=parseInt(this.value);">
-              <option value="10">10s</option>
-              <option value="12">12s</option>
-              <option value="15">15s</option>
-            </select>
-          </div>
-        `;
-      }
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      activeSelection = (tab === 'image' || tab === 'crop' || tab === 'filter') ? 'image' : 'text';
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      renderSubTools();
-      draw();
-    }
-
-    // ইমেজ আপলোড
-    document.getElementById('imageInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          loadedImg = new Image();
-          loadedImg.onload = () => {
-            imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
-            switchTab('image');
-            draw();
-          };
-          loadedImg.src = evt.target.result;
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          e.target.result.createObjectStore(STORE_NAME);
         };
-        reader.readAsDataURL(file);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveToDB(key, val) {
+      const db = await openDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(val, key);
+      return tx.complete;
+    }
+
+    async function getFromDB(key) {
+      const db = await openDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    function showSaveIndicator() {
+      saveStatusElement.style.display = 'block';
+      setTimeout(() => { saveStatusElement.style.display = 'none'; }, 1500);
+    }
+
+    // প্রতিবার কাজ করার পর ডাটাবেসে সেভ হবে
+    async function persistState() {
+      await saveToDB('currentImage', currentImageSrc);
+      await saveToDB('originalImage', originalImageSrc);
+      localStorage.setItem('savedText', textInputElement.value);
+      localStorage.setItem('savedFont', fontSelectElement.value);
+      showSaveIndicator();
+    }
+
+    // অ্যাপে ঢুকলে আগের সংরক্ষিত অবস্থা ফিরিয়ে আনা (Restore on Startup)
+    window.addEventListener('DOMContentLoaded', async () => {
+      const savedCurr = await getFromDB('currentImage');
+      const savedOrig = await getFromDB('originalImage');
+      const savedText = localStorage.getItem('savedText') || '';
+      const savedFont = localStorage.getItem('savedFont') || 'Impact';
+
+      if (savedOrig) originalImageSrc = savedOrig;
+      if (savedCurr) {
+        currentImageSrc = savedCurr;
+        loadImage(currentImageSrc, false);
+      }
+
+      if (savedText) {
+        textInputElement.value = savedText;
+        updateText(false);
+      }
+
+      if (savedFont) {
+        fontSelectElement.value = savedFont;
+        changeFont(savedFont, false);
       }
     });
 
-    // টেক্সট এডিটর ডায়ালগ
-    function openTextEditor() {
-      document.getElementById('modalScriptInput').value = textState.rawText;
-      document.getElementById('textModal').style.display = 'flex';
-    }
-    function closeTextEditor(save) {
-      if (save) {
-        textState.rawText = document.getElementById('modalScriptInput').value;
-        draw();
-      }
-      document.getElementById('textModal').style.display = 'none';
-    }
+    // ১. যেকোনো ফরম্যাটের ইমেজ ইনপুট নেওয়া
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    function resetTransforms() {
-      textState.x = 50; textState.y = 920; textState.w = 980; textState.h = 900;
-      imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
-      draw();
-    }
-
-    // টাচ ও ড্র্যাগ হ্যান্ডলার (PixelLab Selection & Dragging)
-    function getCanvasCoords(e) {
-      const rect = canvas.getBoundingClientRect();
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (cx - rect.left) * (canvas.width / rect.width),
-        y: (cy - rect.top) * (canvas.height / rect.height)
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        originalImageSrc = event.target.result;
+        loadImage(originalImageSrc);
       };
-    }
-
-    canvas.addEventListener('pointerdown', (e) => {
-      const p = getCanvasCoords(e);
-      dragStartX = p.x; dragStartY = p.y;
-
-      if (activeSelection === 'text') {
-        // রিসাইজ হ্যান্ডেল পয়েন্ট (নিচের ডান কোণ)
-        if (p.x >= (textState.x + textState.w - 80) && p.x <= (textState.x + textState.w + 30) &&
-            p.y >= (textState.y + textState.h - 80) && p.y <= (textState.y + textState.h + 30)) {
-          isResizing = true;
-        } else if (p.x >= textState.x && p.x <= (textState.x + textState.w) &&
-                   p.y >= textState.y && p.y <= (textState.y + textState.h)) {
-          isDragging = true;
-        } else {
-          activeSelection = 'image';
-          isDragging = true;
-        }
-      } else {
-        isDragging = true;
-      }
+      reader.readAsDataURL(file);
     });
 
-    window.addEventListener('pointermove', (e) => {
-      if (!isDragging && !isResizing) return;
-      const p = getCanvasCoords(e);
-      const dx = p.x - dragStartX;
-      const dy = p.y - dragStartY;
+    function loadImage(src, shouldSave = true) {
+      currentImageSrc = src;
+      imageElement.src = src;
+      imageElement.style.display = 'block';
 
-      if (activeSelection === 'text') {
-        if (isDragging) {
-          textState.x += dx; textState.y += dy;
-        } else if (isResizing) {
-          textState.w = Math.max(300, textState.w + dx);
-          textState.h = Math.max(200, textState.h + dy);
-        }
-      } else if (activeSelection === 'image' && isDragging) {
-        imgState.x += dx;
-        imgState.y += dy;
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+        document.getElementById('crop-apply-btn').style.display = 'none';
       }
 
-      dragStartX = p.x; dragStartY = p.y;
-      draw();
-    });
-
-    window.addEventListener('pointerup', () => {
-      isDragging = false;
-      isResizing = false;
-    });
-
-    // স্মার্ট কালার হাইলাইট
-    function parseStoryWords(text) {
-      const isUpper = textState.case === 'uppercase';
-      let cleanText = isUpper ? text.toUpperCase() : text;
-      const words = cleanText.trim().split(/\s+/);
-      const ignore = ['THE','AND','FOR','WAS','HIS','HER','WITH','FROM','THAT','THEN','WHEN','THEY','THIS','INTO','OVER'];
-
-      return words.map(w => {
-        let clean = w.replace(/[^a-zA-Z0-9$]/g, '');
-        let col = textState.colorDefault;
-        if (/(\$|\b\d+[\d,]*\b)/.test(clean)) {
-          col = textState.colorNum;
-        } else if (clean.length > 2 && !ignore.includes(clean.toUpperCase()) && /^[A-Z]/.test(clean)) {
-          col = textState.colorName;
-        }
-        return { text: w, color: col };
+      // ৩. দুই আঙুলে জুম (Pinch to Zoom) চালু করা
+      if (panzoomInstance) panzoomInstance.destroy();
+      panzoomInstance = Panzoom(panzoomContainer, {
+        maxScale: 6,
+        minScale: 0.5,
+        contain: 'outside'
       });
+      panzoomContainer.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+
+      if (shouldSave) persistState();
     }
 
-    // অটো ফিল্টার
-    function getFilterCSS() {
-      switch (imgState.filter) {
-        case 'hdr': return 'contrast(130%) saturate(140%) brightness(105%)';
-        case 'warm': return 'sepia(30%) saturate(140%) contrast(115%) brightness(105%)';
-        case 'cool': return 'hue-rotate(185deg) contrast(120%) saturate(120%)';
-        case 'cyber': return 'hue-rotate(305deg) contrast(140%) saturate(160%)';
-        case 'bw': return 'grayscale(100%) contrast(150%) brightness(95%)';
-        default: return 'none';
-      }
-    }
+    // ২. কাস্টম এবং ফিক্সড রেশিও ক্রপ
+    function startCrop(aspectRatio) {
+      if (!imageElement.src || imageElement.style.display === 'none') return;
+      if (panzoomInstance) panzoomInstance.reset();
+      if (cropper) cropper.destroy();
 
-    // ড্রয়িং ফাংশন
-    function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // ১. ব্যাকগ্রাউন্ড ইমেজ ও ক্রপ
-      if (loadedImg) {
-        ctx.save();
-        if (imgState.mask === 'circle') {
-          ctx.beginPath();
-          ctx.arc(canvas.width / 2, 460, 380, 0, Math.PI * 2);
-          ctx.clip();
-        } else if (imgState.mask === 'rounded') {
-          ctx.beginPath();
-          ctx.roundRect(60, 80, canvas.width - 120, 780, 40);
-          ctx.clip();
-        }
-
-        ctx.filter = getFilterCSS();
-        let sw = loadedImg.width, sh = loadedImg.height, sx = 0, sy = 0;
-        if (imgState.cropRatio === '1:1') {
-          let s = Math.min(sw, sh); sx = (sw - s) / 2; sy = (sh - s) / 2; sw = s; sh = s;
-        } else if (imgState.cropRatio === '4:5') {
-          if (sw / sh > 4/5) { let w = sh * (4/5); sx = (sw - w) / 2; sw = w; }
-          else { let h = sw * (5/4); sy = (sh - h) / 2; sh = h; }
-        }
-
-        let dw = canvas.width * imgState.scale * scaleMotion;
-        let dh = (sh / sw) * dw;
-        let dx = (canvas.width - dw) / 2 + imgState.x;
-        let dy = imgState.y + motionOffsetY;
-
-        ctx.drawImage(loadedImg, sx, sy, sw, sh, dx, dy, dw, dh);
-        ctx.restore();
-
-        if (imgState.mask === 'fadeBottom') {
-          let fade = ctx.createLinearGradient(0, 0, 0, canvas.height);
-          fade.addColorStop(0, 'rgba(0,0,0,0.25)');
-          fade.addColorStop(0.45, 'rgba(0,0,0,0.05)');
-          fade.addColorStop(0.7, 'rgba(10,13,20,0.85)');
-          fade.addColorStop(1, 'rgba(10,13,20,1)');
-          ctx.fillStyle = fade;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-      }
-
-      // ২. টেক্সট প্লেট
-      ctx.fillStyle = 'rgba(11, 17, 32, 0.78)';
-      ctx.beginPath();
-      ctx.roundRect(textState.x, textState.y, textState.w, textState.h, 24);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // ৩. টাইপোগ্রাফি
-      const fSize = textState.fontSize;
-      const sWidth = textState.stroke;
-      const words = parseStoryWords(textState.rawText);
-
-      ctx.font = `900 ${fSize}px ${textState.font}`;
-      ctx.textBaseline = 'top';
-
-      const padX = 35;
-      const maxW = textState.w - (padX * 2);
-      const lineH = fSize * 1.5;
-
-      let lines = [];
-      let curLine = [];
-      let curLineWidth = 0;
-
-      words.forEach(item => {
-        const wStr = item.text + ' ';
-        const wWidth = ctx.measureText(wStr).width;
-        if (curLineWidth + wWidth > maxW) {
-          lines.push(curLine);
-          curLine = [item];
-          curLineWidth = wWidth;
-        } else {
-          curLine.push(item);
-          curLineWidth += wWidth;
-        }
+      cropper = new Cropper(imageElement, {
+        aspectRatio: aspectRatio === 'free' ? NaN : aspectRatio,
+        viewMode: 1,
+        autoCropArea: 0.9,
       });
-      if (curLine.length > 0) lines.push(curLine);
+      document.getElementById('crop-apply-btn').style.display = 'inline-block';
+    }
 
-      let curY = textState.y + 30;
-      lines.forEach(line => {
-        if (curY + lineH > textState.y + textState.h - 20) return;
-        const lineTotalW = line.reduce((sum, item) => sum + ctx.measureText(item.text + ' ').width, 0);
-        let curX = textState.x + padX;
-        if (textState.align === 'center') curX = textState.x + (textState.w - lineTotalW) / 2;
-        else if (textState.align === 'right') curX = textState.x + textState.w - padX - lineTotalW;
+    function applyCrop() {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas();
+      currentImageSrc = canvas.toDataURL();
+      cropper.destroy();
+      cropper = null;
+      document.getElementById('crop-apply-btn').style.display = 'none';
+      loadImage(currentImageSrc);
+    }
 
-        line.forEach(item => {
-          const wStr = item.text + ' ';
-          const wWidth = ctx.measureText(wStr).width;
-          if (sWidth > 0) {
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = sWidth;
-            ctx.lineJoin = 'round';
-            ctx.strokeText(wStr, curX, curY);
-          }
-          ctx.shadowColor = 'rgba(0,0,0,0.95)';
-          ctx.shadowBlur = 10;
-          ctx.fillStyle = item.color;
-          ctx.fillText(wStr, curX, curY);
-          curX += wWidth;
+    // ৪. ডিলিট, রিস্টোর ও অল ক্লিয়ার
+    function deleteImage() {
+      imageElement.src = '';
+      imageElement.style.display = 'none';
+      currentImageSrc = '';
+      if (cropper) cropper.destroy();
+      if (panzoomInstance) panzoomInstance.destroy();
+      persistState();
+    }
+
+    function restoreImage() {
+      if (originalImageSrc) {
+        loadImage(originalImageSrc);
+      }
+    }
+
+    async function clearAllData() {
+      if (confirm("আপনি কি সব আগের ডাটা ক্লিয়ার করতে চান?")) {
+        deleteImage();
+        textInputElement.value = '';
+        updateText();
+        localStorage.clear();
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+      }
+    }
+
+    function resetZoom() {
+      if (panzoomInstance) panzoomInstance.reset();
+    }
+
+    // ৫. ফন্ট পরিবর্তন
+    function changeFont(fontName, shouldSave = true) {
+      document.getElementById('text-display').style.fontFamily = fontName;
+      if (shouldSave) persistState();
+    }
+
+    function loadCustomFont(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const fontName = 'CustomFont_' + Date.now();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const font = new FontFace(fontName, e.target.result);
+        font.load().then(function(loadedFont) {
+          document.fonts.add(loadedFont);
+          changeFont(fontName);
+          const option = document.createElement('option');
+          option.value = fontName;
+          option.innerText = file.name;
+          option.selected = true;
+          fontSelectElement.appendChild(option);
         });
-        curY += lineH;
-      });
-      ctx.shadowBlur = 0;
-
-      // ৪. PixelLab বাউন্ডিং বক্স সিলেকশন
-      if (renderUI) {
-        if (activeSelection === 'text') {
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([8, 6]);
-          ctx.strokeRect(textState.x - 4, textState.y - 4, textState.w + 8, textState.h + 8);
-          ctx.setLineDash([]);
-          // রিসাইজ হ্যান্ডেল
-          ctx.fillStyle = '#38bdf8';
-          ctx.fillRect(textState.x + textState.w - 12, textState.y + textState.h - 12, 18, 18);
-        }
-      }
-    }
-
-    // ডাউনলোড পিএনজি
-    function downloadTransparentPNG() {
-      draw(1.0, 0, false);
-      const a = document.createElement('a');
-      a.download = `PixelLab_Overlay_${Date.now()}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-      draw();
-    }
-
-    // মোশন ভিডিও এক্সপোর্ট
-    async function renderMotionVideo() {
-      if (!loadedImg) {
-        alert("অনুগ্রহ করে ➕ বাটন চেপে একটি ছবি দিন!");
-        return;
-      }
-      const btn = document.getElementById('renderBtn');
-      btn.disabled = true;
-      btn.innerText = "RENDERING...";
-
-      const duration = motionState.duration;
-      const fps = 30;
-      const totalFrames = duration * fps;
-
-      const stream = canvas.captureStream(fps);
-      let mime = 'video/webm;codecs=vp9';
-      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
-
-      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
-      const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: mime });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Shorts_Motion_${Date.now()}.webm`;
-        a.click();
-        btn.disabled = false;
-        btn.innerText = "🎥 EXPORT";
-        draw();
       };
-
-      recorder.start();
-      for (let f = 0; f < totalFrames; f++) {
-        const p = f / totalFrames;
-        let scale = 1.0, offsetY = 0;
-        if (motionState.type === 'zoomIn') {
-          scale = 1.0 + (p * 0.20);
-          offsetY = - (p * 35);
-        } else if (motionState.type === 'zoomOut') {
-          scale = 1.20 - (p * 0.20);
-          offsetY = - (35 - (p * 35));
-        }
-        draw(scale, offsetY, false);
-        await new Promise(r => setTimeout(r, 1000 / fps));
-      }
-      recorder.stop();
+      reader.readAsArrayBuffer(file);
     }
 
-    // প্রারম্ভিক ইনিশিয়ালাইজেশন
-    window.onload = () => {
-      renderSubTools();
-      draw();
-    };
+    // টেক্সট রেন্ডারার ([শব্দ] দিলে হলুদ, বাকি সাদা)
+    function updateText(shouldSave = true) {
+      const text = textInputElement.value;
+      const container = document.getElementById('text-display');
+      
+      const formatted = text.replace(/\[(.*?)\]/g, '<span class="c-yellow">$1</span>')
+                            .replace(/([^\]]+)(?=\[|$)/g, function(m) {
+                              if (m.trim() === '') return '';
+                              return '<span class="c-white">' + m + '</span>';
+                            });
+      container.innerHTML = formatted;
+      if (shouldSave) persistState();
+    }
   </script>
 </body>
 </html>
