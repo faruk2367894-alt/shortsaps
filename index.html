@@ -4,12 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="theme-color" content="#111622">
-  <title>PixelLab Shorts Studio Ultra</title>
-  
-  <!-- ১০০% ডিরেক্ট PWA ম্যানিফেস্ট ইনজেকশন -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"PixelLab Shorts Studio","short_name":"PixelLab","start_url":".","display":"standalone","background_color":"#090c13","theme_color":"#111622","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3670/3670151.png","sizes":"512x512","type":"image/png"}]}'>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>PixelLab Shorts Studio Pro</title>
 
-  <!-- গুগল প্রিমিয়াম ফন্ট প্যাক (Roboto, Roboto Slab, Montserrat ইত্যাদি) -->
+  <!-- ১০০% ডিরেক্ট ইনলাইন ভ্যালিড PWA ম্যানিফেস্ট -->
+  <link rel="manifest" id="manifestPlaceholder">
+  <script>
+    const manifestData = {
+      "name": "PixelLab Shorts Studio",
+      "short_name": "PixelLab",
+      "start_url": window.location.href,
+      "display": "standalone",
+      "background_color": "#090c13",
+      "theme_color": "#111622",
+      "orientation": "portrait",
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ]
+    };
+    const stringManifest = JSON.stringify(manifestData);
+    const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+    document.getElementById('manifestPlaceholder').setAttribute('href', URL.createObjectURL(blobManifest));
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;600;800;900&family=Montserrat:wght@400;600;800;900&family=Oswald:wght@600;700&family=Poppins:wght@400;600;800&family=Roboto+Condensed:wght@700&family=Roboto+Slab:wght@700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <style>
@@ -44,14 +74,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 8px;
+      padding: 0 6px;
       border-bottom: 1px solid #202b3d;
       z-index: 20;
     }
     .top-icons {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
     .top-btn {
       background: transparent;
@@ -66,32 +96,33 @@
       border-radius: 6px;
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
+    .top-btn:disabled { color: #334155; cursor: not-allowed; }
     
     .btn-install {
       background: #0ea5e9;
       color: #fff;
       font-size: 10px;
       font-weight: 900;
-      padding: 5px 9px;
+      padding: 5px 8px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
     }
     .btn-export {
       background: #10b981;
       color: #022013;
       font-size: 11px;
       font-weight: 900;
-      padding: 5px 12px;
+      padding: 5px 10px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
     }
 
-    /* ২. মূল ক্যানভাস ওয়ার্কস্পেস */
+    /* ২. ক্যানভাস এরিয়া */
     .workspace {
       flex: 1;
       min-height: 0;
@@ -296,7 +327,8 @@
           ➕<input type="file" id="imageInput" accept="image/*" style="display:none">
         </label>
         <button class="top-btn" onclick="deleteImage()" title="Delete Image">🗑️</button>
-        <button class="top-btn" onclick="restoreOriginalImage()" title="Restore">↺</button>
+        <button class="top-btn" id="btnUndo" onclick="undoAction()" title="Undo">↶</button>
+        <button class="top-btn" id="btnRedo" onclick="redoAction()" title="Redo">↷</button>
         <button class="top-btn" id="btnCompare" title="Before/After Compare">👁️</button>
       </div>
       <div class="top-icons">
@@ -360,12 +392,15 @@
   </div>
 
   <script>
-    // ১. সার্ভিস ওয়ার্কার ইনজেকশন (PWA ১০০% সক্রিয় করতে)
+    // ১. সিঙ্গেল-ফাইল সার্ভিস ওয়ার্কার (PWA Install ট্রিগার করতে)
     if ('serviceWorker' in navigator) {
-      const swCode = "self.addEventListener('fetch', (e) => {});";
-      const swBlob = new Blob([swCode], {type: 'application/javascript'});
-      const swUrl = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl).catch(()=>{});
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
     }
 
     let deferredPrompt = null;
@@ -387,7 +422,7 @@
           deferredPrompt = null;
         });
       } else {
-        alert("📲 সরাসরি অ্যাপ ইন্সটল করার নিয়ম:\n\n১. আপনি যদি Messenger/Facebook ব্রাউজারে থাকেন, তবে উপরে ডানপাশের থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. Chrome ব্রাউজারে সাইটটি ওপেন করে Chrome-এর থ্রি-ডট (⋮) মেনু থেকে 'Add to Home screen' বা 'Install app' দিন।");
+        alert("📲 সরাসরি অ্যাপ ইন্সটল করার সঠিক নিয়ম:\n\n১. লিংকটি মেসেঞ্জার/ফেসবুক ব্রাউজারে থাকলে উপরে থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. ক্রোম ব্রাউজারের থ্রি-ডট (⋮) মেনু থেকে 'Install app' অথবা 'Add to Home screen' চাপুন।");
       }
     }
 
@@ -404,7 +439,6 @@
     let croppedImg = null; 
     let showBeforeComparison = false;
 
-    // স্বতন্ত্র ইমেজ বক্স স্টেট (লকড ক্রপ পর মুভ ও স্কেল হবে)
     let imgBox = {
       x: 0,
       y: 80,
@@ -414,7 +448,6 @@
       filter: 'hdr'
     };
 
-    // টেক্সট বক্স স্টেট
     let textState = {
       x: 40,
       y: 920,
@@ -432,38 +465,125 @@
     };
 
     let motionState = { type: 'zoomIn', duration: 10 };
-    let activeSelection = 'text'; // 'text' অথবা 'image'
+    let activeSelection = 'text';
 
-    // টাচ ও ড্র্যাগ ইন্টারঅ্যাকশন
-    let isDragging = false;
-    let isResizingText = false;
-    let isPinching = false;
-    let touchStartDist = 0;
-    let initialImgW = 0, initialImgH = 0;
-    let dragStartX = 0, dragStartY = 0;
+    // ৩. হিস্ট্রি ইঞ্জিন (Undo / Redo)
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 30;
 
-    // ৩. সাব-টুলস রেন্ডারিং
+    function saveHistory() {
+      const snapshot = {
+        imgBox: JSON.parse(JSON.stringify(imgBox)),
+        textState: JSON.parse(JSON.stringify(textState)),
+        hasCroppedImg: !!croppedImg,
+        croppedImgSrc: croppedImg ? croppedImg.src : null,
+        hasOriginalImg: !!originalImg,
+        originalImgSrc: originalImg ? originalImg.src : null
+      };
+      undoStack.push(snapshot);
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack = [];
+      updateUndoRedoButtons();
+    }
+
+    function undoAction() {
+      if (undoStack.length === 0) return;
+      const currentSnapshot = {
+        imgBox: JSON.parse(JSON.stringify(imgBox)),
+        textState: JSON.parse(JSON.stringify(textState)),
+        hasCroppedImg: !!croppedImg,
+        croppedImgSrc: croppedImg ? croppedImg.src : null,
+        hasOriginalImg: !!originalImg,
+        originalImgSrc: originalImg ? originalImg.src : null
+      };
+      redoStack.push(currentSnapshot);
+
+      const prev = undoStack.pop();
+      applySnapshot(prev);
+      updateUndoRedoButtons();
+    }
+
+    function redoAction() {
+      if (redoStack.length === 0) return;
+      const currentSnapshot = {
+        imgBox: JSON.parse(JSON.stringify(imgBox)),
+        textState: JSON.parse(JSON.stringify(textState)),
+        hasCroppedImg: !!croppedImg,
+        croppedImgSrc: croppedImg ? croppedImg.src : null,
+        hasOriginalImg: !!originalImg,
+        originalImgSrc: originalImg ? originalImg.src : null
+      };
+      undoStack.push(currentSnapshot);
+
+      const next = redoStack.pop();
+      applySnapshot(next);
+      updateUndoRedoButtons();
+    }
+
+    function applySnapshot(snap) {
+      imgBox = JSON.parse(JSON.stringify(snap.imgBox));
+      textState = JSON.parse(JSON.stringify(snap.textState));
+      document.getElementById('modalScriptInput').value = textState.rawText;
+
+      if (snap.hasCroppedImg && snap.croppedImgSrc) {
+        const cImg = new Image();
+        cImg.onload = () => { croppedImg = cImg; draw(); };
+        cImg.src = snap.croppedImgSrc;
+      } else {
+        croppedImg = null;
+      }
+
+      if (snap.hasOriginalImg && snap.originalImgSrc) {
+        const oImg = new Image();
+        oImg.onload = () => { originalImg = oImg; draw(); };
+        oImg.src = snap.originalImgSrc;
+      } else {
+        originalImg = null;
+      }
+
+      renderSubTools();
+      draw();
+      saveProjectState();
+    }
+
+    function updateUndoRedoButtons() {
+      document.getElementById('btnUndo').disabled = (undoStack.length === 0);
+      document.getElementById('btnRedo').disabled = (redoStack.length === 0);
+    }
+
+    // ৪. সাব-টুলস রেন্ডারিং
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
         bar.innerHTML = `
-          <div class="tool-item"><label>FONT SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>BOX WIDTH</label><input type="range" min="400" max="1060" value="${textState.w}" oninput="textState.w=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>BOX HEIGHT</label><input type="range" min="300" max="1400" value="${textState.h}" oninput="textState.h=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>FONT SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>ALIGNMENT</label>
+            <select onchange="saveHistory(); textState.align=this.value; draw(); saveProjectState();">
+              <option value="left" ${textState.align==='left'?'selected':''}>Left (⫷)</option>
+              <option value="center" ${textState.align==='center'?'selected':''}>Center (≡)</option>
+              <option value="right" ${textState.align==='right'?'selected':''}>Right (⫸)</option>
+            </select>
+          </div>
+          <div class="tool-item"><label>BOX WIDTH</label><input type="range" min="400" max="1060" value="${textState.w}" oninput="textState.w=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>BOX HEIGHT</label><input type="range" min="300" max="1400" value="${textState.h}" oninput="textState.h=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
           <div class="tool-item"><label>TEXT CASE</label>
-            <select onchange="textState.caseMode=this.value; draw(); saveProjectState();">
+            <select onchange="saveHistory(); textState.caseMode=this.value; draw(); saveProjectState();">
               <option value="original" ${textState.caseMode==='original'?'selected':''}>Normal (বড়-ছোট)</option>
               <option value="upper" ${textState.caseMode==='upper'?'selected':''}>ALL CAPS (বড়)</option>
             </select>
           </div>
-          <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="saveHistory(); textState.colorNum=this.value; draw(); saveProjectState();"></div>
         `;
       } else if (currentTab === 'image') {
         bar.innerHTML = `
-          <div class="tool-item"><label>MOVE X</label><input type="range" min="-600" max="600" value="${imgBox.x}" oninput="imgBox.x=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-500" max="1200" value="${imgBox.y}" oninput="imgBox.y=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>IMG SCALE</label><input type="range" min="300" max="2200" value="${imgBox.w}" oninput="scaleImageBox(parseInt(this.value)); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE X</label><input type="range" min="-600" max="600" value="${imgBox.x}" oninput="imgBox.x=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-500" max="1200" value="${imgBox.y}" oninput="imgBox.y=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>IMG SCALE</label><input type="range" min="300" max="2200" value="${imgBox.w}" oninput="scaleImageBox(parseInt(this.value)); draw();" onchange="saveHistory(); saveProjectState();"></div>
+          <div class="tool-item"><label>ACTION</label>
+            <button onclick="deleteImage()" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold; cursor:pointer;">🗑️ REMOVE</button>
+          </div>
         `;
       } else if (currentTab === 'crop') {
         bar.innerHTML = `
@@ -471,7 +591,7 @@
             <button onclick="openCropModal()" style="padding:4px 10px; background:#0ea5e9; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold;">✂️ OPEN CROP BOX</button>
           </div>
           <div class="tool-item"><label>MASK STYLE</label>
-            <select onchange="imgBox.mask=this.value; draw(); saveProjectState();">
+            <select onchange="saveHistory(); imgBox.mask=this.value; draw(); saveProjectState();">
               <option value="none" ${imgBox.mask==='none'?'selected':''}>None</option>
               <option value="circle" ${imgBox.mask==='circle'?'selected':''}>Circle</option>
               <option value="rounded" ${imgBox.mask==='rounded'?'selected':''}>Rounded</option>
@@ -482,7 +602,7 @@
       } else if (currentTab === 'filter') {
         bar.innerHTML = `
           <div class="tool-item"><label>SMART FILTER</label>
-            <select onchange="imgBox.filter=this.value; draw(); saveProjectState();">
+            <select onchange="saveHistory(); imgBox.filter=this.value; draw(); saveProjectState();">
               <option value="hdr" ${imgBox.filter==='hdr'?'selected':''}>Vibrant HDR</option>
               <option value="warm" ${imgBox.filter==='warm'?'selected':''}>Warm Glow</option>
               <option value="cool" ${imgBox.filter==='cool'?'selected':''}>Cool Blue</option>
@@ -495,7 +615,7 @@
       } else if (currentTab === 'font') {
         bar.innerHTML = `
           <div class="tool-item"><label>FONT SELECTION</label>
-            <select onchange="textState.font=this.value; draw(); saveProjectState();">
+            <select onchange="saveHistory(); textState.font=this.value; draw(); saveProjectState();">
               <option value="'Roboto', sans-serif">Roboto (Clean)</option>
               <option value="'Roboto Slab', serif">Roboto Slab Bold</option>
               <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
@@ -545,16 +665,17 @@
       saveProjectState();
     }
 
-    // ৪. ইমেজ আপলোড
+    // ৫. ইমেজ আপলোড হ্যান্ডলার
     document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
+        saveHistory();
         const reader = new FileReader();
         reader.onload = function(evt) {
           const img = new Image();
           img.onload = () => {
             originalImg = img;
-            croppedImg = img; // ডিফল্টভাবে সম্পূর্ণ ছবি
+            croppedImg = img;
 
             imgBox.w = canvas.width;
             imgBox.h = (img.height / img.width) * canvas.width;
@@ -572,7 +693,7 @@
       }
     });
 
-    // ৫. ক্রপ স্টুডিও ইঞ্জিন (লকড অ্যান্ড কাট)
+    // ৬. ক্রপ স্টুডিও ইঞ্জিন
     const cropModal = document.getElementById('cropModal');
     const cropCanvas = document.getElementById('cropCanvas');
     const cropCtx = cropCanvas.getContext('2d');
@@ -603,7 +724,6 @@
       cropCanvas.height = h * scale;
       cropCanvasScale = scale;
 
-      // স্বয়ংক্রিয়ভাবে উপরের অর্ধেক অংশ সিলেক্ট করে নিচের লেখা বাদ দেওয়া
       cropBox = {
         x: 0,
         y: 0,
@@ -694,7 +814,7 @@
 
     function closeCropModal(apply) {
       if (apply) {
-        // ক্রপ করা অংশটিকে নতুন ইমেজ হিসেবে তৈরি করে লক করা
+        saveHistory();
         const offCanvas = document.createElement('canvas');
         const sx = cropBox.x / cropCanvasScale;
         const sy = cropBox.y / cropCanvasScale;
@@ -709,7 +829,6 @@
         const newImg = new Image();
         newImg.onload = () => {
           croppedImg = newImg;
-          // ক্রপড ইমেজ বক্স সাইজ ও পজিশন
           imgBox.w = canvas.width;
           imgBox.h = (sh / sw) * canvas.width;
           imgBox.x = 0;
@@ -723,8 +842,15 @@
       cropModal.style.display = 'none';
     }
 
-    // ৬. টাচ, মুভ এবং টেক্সট বক্স রিসাইজ ইঞ্জিন (Touch Gesture Logic)
+    // ৭. টাচ, মুভ এবং রিসাইজ ইঞ্জিন
     const canvasBox = document.getElementById('canvasBox');
+    let isDragging = false;
+    let isResizingText = false;
+    let isPinching = false;
+    let touchStartDist = 0;
+    let initialImgW = 0, initialImgH = 0;
+    let dragStartX = 0, dragStartY = 0;
+    let hadTransformChange = false;
 
     function getCoords(e) {
       const rect = canvas.getBoundingClientRect();
@@ -738,7 +864,7 @@
 
     canvasBox.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
-        // দুই আঙুলে ইমেজ পিঞ্চ জুম
+        saveHistory();
         isPinching = true;
         touchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         initialImgW = imgBox.w;
@@ -747,17 +873,20 @@
         const p = getCoords(e);
         dragStartX = p.x;
         dragStartY = p.y;
+        hadTransformChange = false;
 
-        // টেক্সট বক্সের ডান কোণায় রিসাইজ হ্যান্ডেল পয়েন্ট চেক
         const handleX = textState.x + textState.w;
         const handleY = textState.y + textState.h;
         if (Math.hypot(p.x - handleX, p.y - handleY) < 60) {
+          saveHistory();
           isResizingText = true;
           activeSelection = 'text';
         } else if (p.x >= textState.x && p.x <= textState.x + textState.w && p.y >= textState.y && p.y <= textState.y + textState.h) {
+          saveHistory();
           isDragging = true;
           activeSelection = 'text';
         } else if (croppedImg && p.x >= imgBox.x && p.x <= imgBox.x + imgBox.w && p.y >= imgBox.y && p.y <= imgBox.y + imgBox.h) {
+          saveHistory();
           isDragging = true;
           activeSelection = 'image';
         }
@@ -771,13 +900,14 @@
         const scale = dist / touchStartDist;
         imgBox.w = Math.max(200, Math.min(3000, initialImgW * scale));
         imgBox.h = Math.max(150, Math.min(3000, initialImgH * scale));
+        hadTransformChange = true;
         draw();
         e.preventDefault();
       } else if (isResizingText && e.touches.length === 1) {
-        // টেক্সট বক্স রিসাইজ (Smooth Pull)
         const p = getCoords(e);
         textState.w = Math.max(300, Math.min(1060, p.x - textState.x));
         textState.h = Math.max(200, Math.min(1500, p.y - textState.y));
+        hadTransformChange = true;
         draw();
         e.preventDefault();
       } else if (isDragging && e.touches.length === 1) {
@@ -795,6 +925,7 @@
 
         dragStartX = p.x;
         dragStartY = p.y;
+        hadTransformChange = true;
         draw();
         e.preventDefault();
       }
@@ -804,19 +935,23 @@
       isDragging = false;
       isResizingText = false;
       isPinching = false;
-      saveProjectState();
+      if (hadTransformChange) saveProjectState();
     });
 
-    // ডিলিট ও রিস্টোর
+    // ৮. ডিলিট বাটন
     function deleteImage() {
+      if (!croppedImg && !originalImg) return;
+      saveHistory();
       croppedImg = null;
       originalImg = null;
+      activeSelection = 'text';
       draw();
       saveProjectState();
     }
 
     function restoreOriginalImage() {
       if (originalImg) {
+        saveHistory();
         croppedImg = originalImg;
         imgBox.w = canvas.width;
         imgBox.h = (originalImg.height / originalImg.width) * canvas.width;
@@ -838,6 +973,7 @@
     }
     function closeTextEditor(save) {
       if (save) {
+        saveHistory();
         textState.rawText = document.getElementById('modalScriptInput').value;
         draw();
         saveProjectState();
@@ -845,7 +981,6 @@
       document.getElementById('textModal').style.display = 'none';
     }
 
-    // কালার ও ওয়ার্ড পার্সিং
     function parseStoryWords(text) {
       let cleanText = text;
       if (textState.caseMode === 'upper') cleanText = text.toUpperCase();
@@ -873,11 +1008,10 @@
       }
     }
 
-    // ৭. ক্যানভাস রেন্ডারিং
+    // ৯. মূল ড্রয়িং ইঞ্জিন
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ১. লকড ক্রপড ইমেজ ড্রয়িং (PixelLab Image Box)
       if (croppedImg) {
         ctx.save();
         if (imgBox.mask === 'circle') {
@@ -910,7 +1044,6 @@
           ctx.fillRect(imgBox.x, imgBox.y, imgBox.w, imgBox.h);
         }
 
-        // ইমেজ সিলেকশন বর্ডার
         if (renderUI && activeSelection === 'image') {
           ctx.strokeStyle = '#38bdf8';
           ctx.lineWidth = 3;
@@ -920,7 +1053,6 @@
         }
       }
 
-      // ২. টেক্সট প্লেট
       ctx.fillStyle = 'rgba(11, 17, 32, 0.82)';
       ctx.beginPath();
       ctx.roundRect(textState.x, textState.y, textState.w, textState.h, 24);
@@ -929,7 +1061,6 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // ৩. টাইপোগ্রাফি
       const fSize = textState.fontSize;
       const sWidth = textState.stroke;
       const words = parseStoryWords(textState.rawText);
@@ -961,8 +1092,12 @@
         if (curY + lineH > textState.y + textState.h - 15) return;
         const lineTotalW = line.reduce((sum, item) => sum + ctx.measureText(item.text + ' ').width, 0);
         let curX = textState.x + padX;
-        if (textState.align === 'center') curX = textState.x + (textState.w - lineTotalW) / 2;
-        else if (textState.align === 'right') curX = textState.x + textState.w - padX - lineTotalW;
+
+        if (textState.align === 'center') {
+          curX = textState.x + (textState.w - lineTotalW) / 2;
+        } else if (textState.align === 'right') {
+          curX = textState.x + textState.w - padX - lineTotalW;
+        }
 
         line.forEach(item => {
           const wStr = item.text + ' ';
@@ -983,7 +1118,6 @@
       });
       ctx.shadowBlur = 0;
 
-      // ৪. টেক্সট বক্স সিলেকশন ও রিসাইজ বাটন
       if (renderUI && activeSelection === 'text') {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2;
@@ -991,7 +1125,6 @@
         ctx.strokeRect(textState.x - 4, textState.y - 4, textState.w + 8, textState.h + 8);
         ctx.setLineDash([]);
 
-        // নিচের ডান কোণায় রিসাইজ হ্যান্ডেল আইকন
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
         ctx.arc(textState.x + textState.w, textState.y + textState.h, 18, 0, Math.PI * 2);
@@ -1002,7 +1135,6 @@
       }
     }
 
-    // অটো-সেভ স্টেট
     function saveProjectState() {
       const stateToSave = {
         imgBox: imgBox,
@@ -1088,6 +1220,7 @@
       loadProjectState();
       renderSubTools();
       draw();
+      updateUndoRedoButtons();
     };
   </script>
 </body>
