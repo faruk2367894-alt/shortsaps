@@ -2,104 +2,242 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Photo Text Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mobile Photo & Text Editor</title>
   
-  <!-- Cropper.js & Panzoom Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #121212; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #101010;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* টুলবার */
-    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #1e1e1e; z-index: 10; justify-content: center; }
-    button, label.btn { background: #333; color: #fff; border: 1px solid #555; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-    button:active, label.btn:active { background: #555; }
+    /* মোবাইল টপ বার (হরিজন্টাল স্ক্রলযোগ্য) */
+    .top-bar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #1a1a1a;
+      overflow-x: auto;
+      white-space: nowrap;
+      border-bottom: 1px solid #2d2d2d;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .top-bar::-webkit-scrollbar { display: none; }
+
+    .btn {
+      background: #2b2b2b;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:active { background: #4a4a4a; }
     input[type="file"] { display: none; }
 
-    /* স্ট্যাটাস ইন্ডিকেটর */
-    #save-status { position: absolute; top: 50px; right: 10px; font-size: 11px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 12px; z-index: 20; color: #4caf50; display: none; }
-
-    /* ওয়ার্কস্পেস */
-    .workspace { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; touch-action: none; }
-    #panzoom-container { display: inline-block; position: relative; }
-    #image { max-width: 90vw; max-height: 70vh; display: block; }
-
-    /* টেক্সট ওভারলে (কালো বক্স + হলুদ/সাদা টেক্সট) */
-    .text-overlay {
+    /* অটো-সেভ টোস্ট */
+    #save-tag {
       position: absolute;
-      bottom: 15%;
+      top: 55px;
+      right: 12px;
+      background: rgba(46, 125, 50, 0.9);
+      color: #fff;
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 20px;
+      display: none;
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    /* ইমেজ ওয়ার্কস্পেস */
+    .workspace {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      touch-action: none;
+    }
+
+    #panzoom-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    #image {
+      max-width: 95vw;
+      max-height: 52vh;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+    }
+
+    /* ভিডিওর মতো কালো বক্সে হলুদ ও সাদা টেক্সট */
+    .caption-box {
+      position: absolute;
+      bottom: 20%;
       left: 50%;
       transform: translateX(-50%);
-      width: 85%;
+      width: 90%;
       text-align: center;
-      line-height: 1.4;
-      pointer-events: auto;
+      z-index: 15;
+      line-height: 1.45;
+      pointer-events: none;
     }
-    .text-overlay span {
+    
+    .caption-box span {
+      display: inline;
       background: #000;
-      padding: 2px 6px;
+      padding: 3px 7px;
       font-weight: 900;
-      font-size: 18px;
-      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
       box-decoration-break: clone;
       -webkit-box-decoration-break: clone;
     }
-    .c-white { color: #ffffff; }
-    .c-yellow { color: #ffd700; }
+    .caption-box span.c-white {
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .caption-box span.c-yellow {
+      color: #ffd000;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
 
-    /* কন্ট্রোল প্যানেল */
-    .controls { padding: 10px; background: #1e1e1e; display: flex; flex-direction: column; gap: 8px; }
-    .text-input-area { display: flex; gap: 6px; }
-    input[type="text"], select { flex: 1; padding: 6px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; }
+    /* মোবাইল বটম কন্ট্রোল প্যানেল */
+    .bottom-panel {
+      background: #181818;
+      border-top: 1px solid #2c2c2c;
+      padding: 10px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      max-height: 42vh;
+      overflow-y: auto;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    textarea {
+      flex: 1;
+      height: 44px;
+      background: #252525;
+      border: 1px solid #3d3d3d;
+      color: #fff;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      resize: none;
+    }
+    textarea:focus { outline: none; border-color: #ffd000; }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .control-row::-webkit-scrollbar { display: none; }
+
+    select {
+      flex: 1;
+      min-width: 120px;
+      background: #252525;
+      color: #fff;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 12px;
+      height: 34px;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #aaa;
+    }
+    input[type="range"] {
+      width: 80px;
+      accent-color: #ffd000;
+    }
   </style>
 </head>
 <body>
 
-  <div id="save-status">✓ সংরক্ষিত হয়েছে</div>
+  <div id="save-tag">✓ সংরক্ষিত</div>
 
-  <!-- শীর্ষ টুলবার -->
-  <div class="toolbar">
-    <label class="btn">📂 নতুন ইমেজ <input type="file" id="file-input" accept="image/*"></label>
-    <button onclick="startCrop('free')">কাস্টম Crop</button>
-    <button onclick="startCrop(9/16)">9:16 Crop</button>
-    <button onclick="startCrop(1)">1:1 Crop</button>
-    <button onclick="applyCrop()" id="crop-apply-btn" style="display:none; background:#2e7d32;">Apply Crop</button>
-    <button onclick="deleteImage()">🗑️ ডিলিট</button>
-    <button onclick="restoreImage()">↩️ রিস্টোর</button>
-    <button onclick="resetZoom()">🔍 জুম রিসেট</button>
-    <button onclick="clearAllData()" style="background:#b71c1c;">সব ক্লিয়ার</button>
+  <div class="top-bar">
+    <label class="btn">📂 ছবি আনুন <input type="file" id="file-input" accept="image/*"></label>
+    <button class="btn" onclick="startCrop('free')">কাস্টম Crop</button>
+    <button class="btn" onclick="startCrop(9/16)">9:16 Shorts</button>
+    <button class="btn" onclick="startCrop(1)">1:1 স্কয়ার</button>
+    <button class="btn" onclick="applyCrop()" id="crop-apply-btn" style="display:none; background:#2e7d32;">Apply Crop</button>
+    <button class="btn" onclick="deleteImage()">🗑️ ডিলিট</button>
+    <button class="btn" onclick="restoreImage()">↩️ রিস্টোর</button>
+    <button class="btn" onclick="resetZoom()">🔍 রিসেট</button>
+    <button class="btn" onclick="clearAllData()" style="background:#8b1b1b;">সব ক্লিয়ার</button>
   </div>
 
-  <!-- ইমেজ ওয়ার্কস্পেস (Pinch-to-zoom সহ) -->
   <div class="workspace" id="workspace">
     <div id="panzoom-container">
-      <img id="image" src="" style="display:none;" alt="Workspace Image">
-      <div id="text-display" class="text-overlay"></div>
+      <img id="image" src="" style="display:none;" alt="Workspace">
+      <div id="caption-box" class="caption-box"></div>
     </div>
   </div>
 
-  <!-- টেক্সট ও ফন্ট কন্ট্রোল -->
-  <div class="controls">
-    <div class="text-input-area">
-      <input type="text" id="text-input" placeholder="হাইলাইট করতে ব্র্যাকেট দিন: [HE GOT] HURT" oninput="updateText()">
-      <button onclick="updateText()">সেট করুন</button>
+  <div class="bottom-panel">
+    <div class="input-row">
+      <textarea id="text-input" placeholder="হলুদ করতে [ব্র্যাকেট] দিন: [HE GOT] HURT" oninput="renderText()"></textarea>
+      <button class="btn" onclick="insertBracket()" style="background:#ffd000; color:#000; height:44px; font-weight:bold;">[হলুদ]</button>
     </div>
-    <div style="display: flex; gap: 6px;">
-      <select id="font-select" onchange="changeFont(this.value)">
-        <option value="Impact">Impact (Heavy Bold)</option>
-        <option value="Arial Black">Arial Black</option>
-        <option value="Trebuchet MS">Trebuchet MS</option>
-        <option value="sans-serif">System Sans-Serif</option>
-        <option value="serif">System Serif</option>
-        <option value="monospace">System Monospace</option>
+    
+    <div class="control-row">
+      <select id="font-select" onchange="setFont(this.value)">
+        <option value="'Impact', 'Arial Black', sans-serif">Impact (Bold Shorts)</option>
+        <option value="'Arial Black', sans-serif">Arial Black</option>
+        <option value="system-ui, sans-serif">System Sans</option>
+        <option value="serif">Classic Serif</option>
       </select>
-      <label class="btn" style="flex: 1; text-align: center;">
-        ➕ নিজস্ব ফন্ট (.ttf/.otf) <input type="file" id="font-input" accept=".ttf,.otf,.woff,.woff2" onchange="loadCustomFont(event)">
+
+      <label class="btn" style="white-space: nowrap; height:34px;">
+        ➕ ফন্ট ফাইল <input type="file" id="font-input" accept=".ttf,.otf,.woff" onchange="loadCustomFont(event)">
       </label>
+
+      <div class="slider-group">
+        <span>সাইজ</span>
+        <input type="range" id="font-size" min="14" max="36" value="20" oninput="setFontSize(this.value)">
+      </div>
     </div>
   </div>
 
@@ -111,81 +249,67 @@
 
     const imageElement = document.getElementById('image');
     const panzoomContainer = document.getElementById('panzoom-container');
-    const textInputElement = document.getElementById('text-input');
-    const fontSelectElement = document.getElementById('font-select');
-    const saveStatusElement = document.getElementById('save-status');
+    const captionBox = document.getElementById('caption-box');
+    const textInput = document.getElementById('text-input');
+    const fontSelect = document.getElementById('font-select');
+    const saveTag = document.getElementById('save-tag');
 
-    // --- অটো-সেভ ইঞ্জিন (IndexedDB দিয়ে হাই-কোয়ালিটি ইমেজ স্টোরেজ) ---
-    const DB_NAME = 'PhotoEditorDB';
-    const STORE_NAME = 'editorState';
-
+    // ডাটাবেস (IndexedDB)
+    const DB_NAME = 'PhotoEditorDB_v3';
     function openDB() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          e.target.result.createObjectStore(STORE_NAME);
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function saveToDB(key, val) {
-      const db = await openDB();
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(val, key);
-      return tx.complete;
-    }
-
-    async function getFromDB(key) {
-      const db = await openDB();
       return new Promise((resolve) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const req = tx.objectStore(STORE_NAME).get(key);
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => e.target.result.createObjectStore('state');
         req.onsuccess = () => resolve(req.result);
-        req.onerror = () => resolve(null);
       });
     }
 
-    function showSaveIndicator() {
-      saveStatusElement.style.display = 'block';
-      setTimeout(() => { saveStatusElement.style.display = 'none'; }, 1500);
+    async function saveState() {
+      const db = await openDB();
+      const tx = db.transaction('state', 'readwrite');
+      tx.objectStore('state').put(currentImageSrc, 'currImg');
+      tx.objectStore('state').put(originalImageSrc, 'origImg');
+      localStorage.setItem('savedText', textInput.value);
+      localStorage.setItem('savedFont', fontSelect.value);
+      localStorage.setItem('savedFontSize', document.getElementById('font-size').value);
+      
+      saveTag.style.display = 'block';
+      setTimeout(() => { saveTag.style.display = 'none'; }, 900);
     }
 
-    // প্রতিবার কাজ করার পর ডাটাবেসে সেভ হবে
-    async function persistState() {
-      await saveToDB('currentImage', currentImageSrc);
-      await saveToDB('originalImage', originalImageSrc);
-      localStorage.setItem('savedText', textInputElement.value);
-      localStorage.setItem('savedFont', fontSelectElement.value);
-      showSaveIndicator();
-    }
-
-    // অ্যাপে ঢুকলে আগের সংরক্ষিত অবস্থা ফিরিয়ে আনা (Restore on Startup)
+    // অটো-রিস্টোর
     window.addEventListener('DOMContentLoaded', async () => {
-      const savedCurr = await getFromDB('currentImage');
-      const savedOrig = await getFromDB('originalImage');
-      const savedText = localStorage.getItem('savedText') || '';
-      const savedFont = localStorage.getItem('savedFont') || 'Impact';
+      const db = await openDB();
+      const tx = db.transaction('state', 'readonly');
+      const store = tx.objectStore('state');
+      
+      const reqCurr = store.get('currImg');
+      reqCurr.onsuccess = () => {
+        if (reqCurr.result) {
+          currentImageSrc = reqCurr.result;
+          loadImage(currentImageSrc, false);
+        }
+      };
 
-      if (savedOrig) originalImageSrc = savedOrig;
-      if (savedCurr) {
-        currentImageSrc = savedCurr;
-        loadImage(currentImageSrc, false);
-      }
+      const reqOrig = store.get('origImg');
+      reqOrig.onsuccess = () => {
+        if (reqOrig.result) originalImageSrc = reqOrig.result;
+      };
 
-      if (savedText) {
-        textInputElement.value = savedText;
-        updateText(false);
-      }
+      const savedText = localStorage.getItem('savedText') || '[HE GOT] HURT\nDAVID LEE ROTH RISKED EVERYTHING...';
+      const savedFont = localStorage.getItem('savedFont') || "'Impact', 'Arial Black', sans-serif";
+      const savedFontSize = localStorage.getItem('savedFontSize') || '20';
 
-      if (savedFont) {
-        fontSelectElement.value = savedFont;
-        changeFont(savedFont, false);
-      }
+      textInput.value = savedText;
+      fontSelect.value = savedFont;
+      document.getElementById('font-size').value = savedFontSize;
+
+      setFont(savedFont, false);
+      setFontSize(savedFontSize, false);
+      renderText(false);
     });
 
-    // ১. যেকোনো ফরম্যাটের ইমেজ ইনপুট নেওয়া
+    // ইমেজ লোড
     document.getElementById('file-input').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -198,7 +322,7 @@
       reader.readAsDataURL(file);
     });
 
-    function loadImage(src, shouldSave = true) {
+    function loadImage(src, save = true) {
       currentImageSrc = src;
       imageElement.src = src;
       imageElement.style.display = 'block';
@@ -209,112 +333,132 @@
         document.getElementById('crop-apply-btn').style.display = 'none';
       }
 
-      // ৩. দুই আঙুলে জুম (Pinch to Zoom) চালু করা
+      // মোবাইলের জন্য দুই আঙুলে জুম
       if (panzoomInstance) panzoomInstance.destroy();
       panzoomInstance = Panzoom(panzoomContainer, {
         maxScale: 6,
-        minScale: 0.5,
+        minScale: 0.6,
         contain: 'outside'
       });
       panzoomContainer.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
 
-      if (shouldSave) persistState();
+      if (save) saveState();
     }
 
-    // ২. কাস্টম এবং ফিক্সড রেশিও ক্রপ
-    function startCrop(aspectRatio) {
+    // ক্রপ
+    function startCrop(ratio) {
       if (!imageElement.src || imageElement.style.display === 'none') return;
       if (panzoomInstance) panzoomInstance.reset();
       if (cropper) cropper.destroy();
 
       cropper = new Cropper(imageElement, {
-        aspectRatio: aspectRatio === 'free' ? NaN : aspectRatio,
+        aspectRatio: ratio === 'free' ? NaN : ratio,
         viewMode: 1,
-        autoCropArea: 0.9,
+        autoCropArea: 0.95
       });
       document.getElementById('crop-apply-btn').style.display = 'inline-block';
     }
 
     function applyCrop() {
       if (!cropper) return;
-      const canvas = cropper.getCroppedCanvas();
-      currentImageSrc = canvas.toDataURL();
+      currentImageSrc = cropper.getCroppedCanvas().toDataURL();
       cropper.destroy();
       cropper = null;
       document.getElementById('crop-apply-btn').style.display = 'none';
       loadImage(currentImageSrc);
     }
 
-    // ৪. ডিলিট, রিস্টোর ও অল ক্লিয়ার
+    // ডিলিট ও ক্লিয়ার
     function deleteImage() {
       imageElement.src = '';
       imageElement.style.display = 'none';
       currentImageSrc = '';
       if (cropper) cropper.destroy();
       if (panzoomInstance) panzoomInstance.destroy();
-      persistState();
+      saveState();
     }
 
     function restoreImage() {
-      if (originalImageSrc) {
-        loadImage(originalImageSrc);
-      }
-    }
-
-    async function clearAllData() {
-      if (confirm("আপনি কি সব আগের ডাটা ক্লিয়ার করতে চান?")) {
-        deleteImage();
-        textInputElement.value = '';
-        updateText();
-        localStorage.clear();
-        const db = await openDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).clear();
-      }
+      if (originalImageSrc) loadImage(originalImageSrc);
     }
 
     function resetZoom() {
       if (panzoomInstance) panzoomInstance.reset();
     }
 
-    // ৫. ফন্ট পরিবর্তন
-    function changeFont(fontName, shouldSave = true) {
-      document.getElementById('text-display').style.fontFamily = fontName;
-      if (shouldSave) persistState();
+    async function clearAllData() {
+      if (confirm("সব ক্লিয়ার করে নতুন শুরু করতে চান?")) {
+        deleteImage();
+        textInput.value = '';
+        renderText();
+        localStorage.clear();
+        const db = await openDB();
+        db.transaction('state', 'readwrite').objectStore('state').clear();
+      }
     }
 
-    function loadCustomFont(event) {
-      const file = event.target.files[0];
+    // টেক্সট রেন্ডার
+    function renderText(save = true) {
+      const val = textInput.value;
+      if (!val) {
+        captionBox.innerHTML = '';
+        if (save) saveState();
+        return;
+      }
+
+      let formatted = val.replace(/\[(.*?)\]/g, '<span class="c-yellow">$1</span>');
+      formatted = formatted.replace(/([^\]\n]+)(?=\[|$)/g, function(match) {
+        if (!match.trim()) return match;
+        return '<span class="c-white">' + match + '</span>';
+      });
+
+      formatted = formatted.replace(/\n/g, '<br>');
+      captionBox.innerHTML = formatted;
+      if (save) saveState();
+    }
+
+    // হলুদ করার কুইক বাটন
+    function insertBracket() {
+      const start = textInput.selectionStart;
+      const end = textInput.selectionEnd;
+      const text = textInput.value;
+      if (start !== end) {
+        const selected = text.substring(start, end);
+        textInput.value = text.substring(0, start) + '[' + selected + ']' + text.substring(end);
+      } else {
+        textInput.value += ' [HE GOT]';
+      }
+      renderText();
+    }
+
+    function setFont(fontName, save = true) {
+      captionBox.style.fontFamily = fontName;
+      if (save) saveState();
+    }
+
+    function setFontSize(size, save = true) {
+      captionBox.style.fontSize = size + 'px';
+      if (save) saveState();
+    }
+
+    function loadCustomFont(e) {
+      const file = e.target.files[0];
       if (!file) return;
-      const fontName = 'CustomFont_' + Date.now();
+      const fontName = 'Font_' + Date.now();
       const reader = new FileReader();
-      reader.onload = function(e) {
-        const font = new FontFace(fontName, e.target.result);
-        font.load().then(function(loadedFont) {
-          document.fonts.add(loadedFont);
-          changeFont(fontName);
-          const option = document.createElement('option');
-          option.value = fontName;
-          option.innerText = file.name;
-          option.selected = true;
-          fontSelectElement.appendChild(option);
+      reader.onload = function(evt) {
+        const font = new FontFace(fontName, evt.target.result);
+        font.load().then(function(loaded) {
+          document.fonts.add(loaded);
+          setFont(fontName);
+          const opt = document.createElement('option');
+          opt.value = fontName;
+          opt.innerText = file.name;
+          opt.selected = true;
+          fontSelect.appendChild(opt);
         });
       };
       reader.readAsArrayBuffer(file);
-    }
-
-    // টেক্সট রেন্ডারার ([শব্দ] দিলে হলুদ, বাকি সাদা)
-    function updateText(shouldSave = true) {
-      const text = textInputElement.value;
-      const container = document.getElementById('text-display');
-      
-      const formatted = text.replace(/\[(.*?)\]/g, '<span class="c-yellow">$1</span>')
-                            .replace(/([^\]]+)(?=\[|$)/g, function(m) {
-                              if (m.trim() === '') return '';
-                              return '<span class="c-white">' + m + '</span>';
-                            });
-      container.innerHTML = formatted;
-      if (shouldSave) persistState();
     }
   </script>
 </body>
