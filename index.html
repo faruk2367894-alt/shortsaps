@@ -4,42 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="theme-color" content="#111622">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>PixelLab Shorts Studio Pro</title>
+  <title>PixelLab Shorts Studio Ultra</title>
 
-  <!-- ১০০% ডিরেক্ট ইনলাইন ভ্যালিড PWA ম্যানিফেস্ট -->
-  <link rel="manifest" id="manifestPlaceholder">
-  <script>
-    const manifestData = {
-      "name": "PixelLab Shorts Studio",
-      "short_name": "PixelLab",
-      "start_url": window.location.href,
-      "display": "standalone",
-      "background_color": "#090c13",
-      "theme_color": "#111622",
-      "orientation": "portrait",
-      "icons": [
-        {
-          "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
-          "sizes": "192x192",
-          "type": "image/png",
-          "purpose": "any maskable"
-        },
-        {
-          "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
-          "sizes": "512x512",
-          "type": "image/png",
-          "purpose": "any maskable"
-        }
-      ]
-    };
-    const stringManifest = JSON.stringify(manifestData);
-    const blobManifest = new Blob([stringManifest], {type: 'application/json'});
-    document.getElementById('manifestPlaceholder').setAttribute('href', URL.createObjectURL(blobManifest));
-  </script>
-
+  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;600;800;900&family=Montserrat:wght@400;600;800;900&family=Oswald:wght@600;700&family=Poppins:wght@400;600;800&family=Roboto+Condensed:wght@700&family=Roboto+Slab:wght@700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <style>
@@ -65,8 +32,6 @@
       width: 100%;
       position: relative;
     }
-
-    /* ১. টপ বার */
     .top-bar {
       height: 46px;
       min-height: 46px;
@@ -92,7 +57,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 5px;
+      padding: 6px;
       border-radius: 6px;
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
@@ -107,9 +72,7 @@
       border-radius: 6px;
       border: none;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 2px;
+      display: none;
     }
     .btn-export {
       background: #10b981;
@@ -122,7 +85,6 @@
       cursor: pointer;
     }
 
-    /* ২. ক্যানভাস এরিয়া */
     .workspace {
       flex: 1;
       min-height: 0;
@@ -151,7 +113,6 @@
       touch-action: none;
     }
 
-    /* ৩. বটম কন্ট্রোল প্যানেল */
     .bottom-panel {
       min-height: 96px;
       background: #121824;
@@ -221,7 +182,6 @@
       background: #151d2a;
     }
 
-    /* টেক্সট এডিটর মডাল */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -255,22 +215,22 @@
       resize: none;
     }
 
-    /* ক্রপ স্টুডিও পপআপ */
+    /* নতুন সংশোধিত ক্রপ স্টুডিও */
     #cropModal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.95);
+      background: #090d14;
       display: none;
       flex-direction: column;
       z-index: 150;
-      padding: 8px;
+      padding: 6px;
     }
     .crop-topbar {
       height: 42px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #2a374f;
+      border-bottom: 1px solid #202b3d;
       padding: 0 4px;
       color: #38bdf8;
       font-size: 12px;
@@ -283,12 +243,10 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      margin: 8px 0;
+      margin: 6px 0;
       touch-action: none;
     }
     #cropCanvas {
-      max-width: 100%;
-      max-height: 100%;
       box-shadow: 0 0 25px rgba(0,0,0,0.9);
       touch-action: none;
     }
@@ -296,7 +254,9 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding: 6px 0;
+      padding: 8px 4px;
+      background: #111622;
+      border-radius: 8px;
     }
     .crop-pill {
       background: #1e293b;
@@ -319,7 +279,6 @@
 <body>
 
   <div class="app-root">
-    <!-- টপবার -->
     <div class="top-bar">
       <div class="top-icons">
         <button class="top-btn" onclick="openTextEditor()" title="Edit Text">✏️</button>
@@ -338,14 +297,12 @@
       </div>
     </div>
 
-    <!-- ক্যানভাস ওয়ার্কস্পেস -->
     <div class="workspace">
       <div class="canvas-container" id="canvasBox">
         <canvas id="shortsCanvas" width="1080" height="1920"></canvas>
       </div>
     </div>
 
-    <!-- বটম কন্ট্রোল প্যানেল -->
     <div class="bottom-panel">
       <div class="sub-tools" id="subToolsBar"></div>
       <div class="main-tabs">
@@ -359,11 +316,10 @@
     </div>
   </div>
 
-  <!-- টেক্সট এডিটর মডাল -->
   <div class="modal-overlay" id="textModal">
     <div class="modal-card">
-      <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (CASE PRESERVED)</span>
-      <textarea id="modalScriptInput">Jamie Lee Curtis had a secret. For 10 years she was addicted to painkillers. She stole from friends. She forged prescriptions. She hid bottles in her car. In her purse. In her closet. Nobody suspected. Not her famous husband. Not her children. Nobody. Then a friend offered her a pill. She opened her mouth. She had said yes a thousand times before. This time she said no. She couldn't believe she'd said it. "My secret was only as sick as I was," she said. She told her husband that night. She entered rehab the next day. One word changed everything. Subscribe ❤️ if you believe one brave decision can change a life.</textarea>
+      <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT</span>
+      <textarea id="modalScriptInput">In 2016, Jason Statham proposed to Rosie Huntington-Whiteley after six years together. The world waited for a Hollywood wedding, but it never came. Reporters kept asking, "When's the wedding?" Rosie said, "We're happy as we are now." In 2017, they had their son, Jack. In 2022, daughter Isabella arrived. No big church, no cameras, just two people choosing each other every day.</textarea>
       <div style="display:flex; justify-content:flex-end; gap:8px;">
         <button onclick="closeTextEditor(false)" style="padding:6px 12px; background:#334155; border:none; border-radius:6px; color:#fff; font-size:11px;">Cancel</button>
         <button onclick="closeTextEditor(true)" style="padding:6px 12px; background:#0ea5e9; border:none; border-radius:6px; color:#fff; font-size:11px;">Done</button>
@@ -371,7 +327,7 @@
     </div>
   </div>
 
-  <!-- ক্রপ স্টুডিও পপআপ -->
+  <!-- ক্রপ স্টুডিও -->
   <div id="cropModal">
     <div class="crop-topbar">
       <span>✂️ CROP STUDIO (LOCK & CUT)</span>
@@ -392,20 +348,12 @@
   </div>
 
   <script>
-    // ১. সিঙ্গেল-ফাইল সার্ভিস ওয়ার্কার (PWA Install ট্রিগার করতে)
     if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
     }
 
     let deferredPrompt = null;
     const pwaBtn = document.getElementById('pwaBtn');
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -415,14 +363,12 @@
     function triggerPwaInstall() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') {
-            pwaBtn.style.display = 'none';
-          }
+        deferredPrompt.userChoice.then((c) => {
+          if (c.outcome === 'accepted') pwaBtn.style.display = 'none';
           deferredPrompt = null;
         });
       } else {
-        alert("📲 সরাসরি অ্যাপ ইন্সটল করার সঠিক নিয়ম:\n\n১. লিংকটি মেসেঞ্জার/ফেসবুক ব্রাউজারে থাকলে উপরে থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. ক্রোম ব্রাউজারের থ্রি-ডট (⋮) মেনু থেকে 'Install app' অথবা 'Add to Home screen' চাপুন।");
+        alert("📲 সরাসরি অ্যাপ ইন্সটল করতে Chrome ব্রাউজারের থ্রি-ডট (⋮) মেনু থেকে 'Add to Home screen' বা 'Install app' দিন।");
       }
     }
 
@@ -430,7 +376,6 @@
       pwaBtn.style.display = 'none';
     }
 
-    // ২. ক্যানভাস এবং স্টেট সেটআপ
     const canvas = document.getElementById('shortsCanvas');
     const ctx = canvas.getContext('2d');
     let currentTab = 'text';
@@ -441,7 +386,7 @@
 
     let imgBox = {
       x: 0,
-      y: 80,
+      y: 60,
       w: 1080,
       h: 800,
       mask: 'none',
@@ -450,9 +395,9 @@
 
     let textState = {
       x: 40,
-      y: 920,
+      y: 900,
       w: 1000,
-      h: 900,
+      h: 940,
       fontSize: 28,
       stroke: 10,
       font: "'Roboto', sans-serif",
@@ -467,18 +412,15 @@
     let motionState = { type: 'zoomIn', duration: 10 };
     let activeSelection = 'text';
 
-    // ৩. হিস্ট্রি ইঞ্জিন (Undo / Redo)
     let undoStack = [];
     let redoStack = [];
-    const MAX_HISTORY = 30;
+    const MAX_HISTORY = 25;
 
     function saveHistory() {
       const snapshot = {
         imgBox: JSON.parse(JSON.stringify(imgBox)),
         textState: JSON.parse(JSON.stringify(textState)),
-        hasCroppedImg: !!croppedImg,
         croppedImgSrc: croppedImg ? croppedImg.src : null,
-        hasOriginalImg: !!originalImg,
         originalImgSrc: originalImg ? originalImg.src : null
       };
       undoStack.push(snapshot);
@@ -489,36 +431,28 @@
 
     function undoAction() {
       if (undoStack.length === 0) return;
-      const currentSnapshot = {
+      const current = {
         imgBox: JSON.parse(JSON.stringify(imgBox)),
         textState: JSON.parse(JSON.stringify(textState)),
-        hasCroppedImg: !!croppedImg,
         croppedImgSrc: croppedImg ? croppedImg.src : null,
-        hasOriginalImg: !!originalImg,
         originalImgSrc: originalImg ? originalImg.src : null
       };
-      redoStack.push(currentSnapshot);
-
+      redoStack.push(current);
       const prev = undoStack.pop();
       applySnapshot(prev);
-      updateUndoRedoButtons();
     }
 
     function redoAction() {
       if (redoStack.length === 0) return;
-      const currentSnapshot = {
+      const current = {
         imgBox: JSON.parse(JSON.stringify(imgBox)),
         textState: JSON.parse(JSON.stringify(textState)),
-        hasCroppedImg: !!croppedImg,
         croppedImgSrc: croppedImg ? croppedImg.src : null,
-        hasOriginalImg: !!originalImg,
         originalImgSrc: originalImg ? originalImg.src : null
       };
-      undoStack.push(currentSnapshot);
-
+      undoStack.push(current);
       const next = redoStack.pop();
       applySnapshot(next);
-      updateUndoRedoButtons();
     }
 
     function applySnapshot(snap) {
@@ -526,7 +460,7 @@
       textState = JSON.parse(JSON.stringify(snap.textState));
       document.getElementById('modalScriptInput').value = textState.rawText;
 
-      if (snap.hasCroppedImg && snap.croppedImgSrc) {
+      if (snap.croppedImgSrc) {
         const cImg = new Image();
         cImg.onload = () => { croppedImg = cImg; draw(); };
         cImg.src = snap.croppedImgSrc;
@@ -534,7 +468,7 @@
         croppedImg = null;
       }
 
-      if (snap.hasOriginalImg && snap.originalImgSrc) {
+      if (snap.originalImgSrc) {
         const oImg = new Image();
         oImg.onload = () => { originalImg = oImg; draw(); };
         oImg.src = snap.originalImgSrc;
@@ -544,6 +478,7 @@
 
       renderSubTools();
       draw();
+      updateUndoRedoButtons();
       saveProjectState();
     }
 
@@ -552,7 +487,6 @@
       document.getElementById('btnRedo').disabled = (redoStack.length === 0);
     }
 
-    // ৪. সাব-টুলস রেন্ডারিং
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
@@ -570,8 +504,8 @@
           <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw();" onchange="saveHistory(); saveProjectState();"></div>
           <div class="tool-item"><label>TEXT CASE</label>
             <select onchange="saveHistory(); textState.caseMode=this.value; draw(); saveProjectState();">
-              <option value="original" ${textState.caseMode==='original'?'selected':''}>Normal (বড়-ছোট)</option>
-              <option value="upper" ${textState.caseMode==='upper'?'selected':''}>ALL CAPS (বড়)</option>
+              <option value="original" ${textState.caseMode==='original'?'selected':''}>Normal</option>
+              <option value="upper" ${textState.caseMode==='upper'?'selected':''}>ALL CAPS</option>
             </select>
           </div>
           <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="saveHistory(); textState.colorNum=this.value; draw(); saveProjectState();"></div>
@@ -616,7 +550,7 @@
         bar.innerHTML = `
           <div class="tool-item"><label>FONT SELECTION</label>
             <select onchange="saveHistory(); textState.font=this.value; draw(); saveProjectState();">
-              <option value="'Roboto', sans-serif">Roboto (Clean)</option>
+              <option value="'Roboto', sans-serif">Roboto Clean</option>
               <option value="'Roboto Slab', serif">Roboto Slab Bold</option>
               <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
               <option value="'Inter', sans-serif">Inter Pro</option>
@@ -665,7 +599,6 @@
       saveProjectState();
     }
 
-    // ৫. ইমেজ আপলোড হ্যান্ডলার
     document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -680,7 +613,7 @@
             imgBox.w = canvas.width;
             imgBox.h = (img.height / img.width) * canvas.width;
             imgBox.x = 0;
-            imgBox.y = 80;
+            imgBox.y = 60;
 
             switchTab('crop');
             draw();
@@ -693,7 +626,9 @@
       }
     });
 
-    // ৬. ক্রপ স্টুডিও ইঞ্জিন
+    // ==========================================
+    // ১০০% পারফেক্ট ক্রপ ইঞ্জিন (ফিক্সড ভিউপোর্ট)
+    // ==========================================
     const cropModal = document.getElementById('cropModal');
     const cropCanvas = document.getElementById('cropCanvas');
     const cropCtx = cropCanvas.getContext('2d');
@@ -702,11 +637,11 @@
     let isDraggingCrop = false;
     let isResizingCrop = false;
     let cropTouchStart = { x: 0, y: 0 };
-    let cropCanvasScale = 1.0;
+    let cropScale = 1.0;
 
     function openCropModal() {
       if (!originalImg) {
-        alert("অনুগ্রহ করে ➕ চেপে ছবি দিন!");
+        alert("অনুগ্রহ করে আগে ➕ বাটন চেপে ছবি সিলেক্ট করুন!");
         return;
       }
       cropModal.style.display = 'flex';
@@ -714,21 +649,24 @@
     }
 
     function setupCropCanvas() {
-      const maxW = window.innerWidth - 20;
-      const maxH = window.innerHeight - 120;
-      let w = originalImg.width;
-      let h = originalImg.height;
+      const workspace = document.querySelector('.crop-workspace');
+      const maxW = workspace.clientWidth - 10;
+      const maxH = workspace.clientHeight - 10;
 
-      const scale = Math.min(maxW / w, maxH / h, 1.0);
-      cropCanvas.width = w * scale;
-      cropCanvas.height = h * scale;
-      cropCanvasScale = scale;
+      let w = originalImg.naturalWidth || originalImg.width;
+      let h = originalImg.naturalHeight || originalImg.height;
 
+      // সঠিক স্কেল (ছবি চ্যাপ্টা হবে না)
+      cropScale = Math.min(maxW / w, maxH / h);
+      cropCanvas.width = Math.round(w * cropScale);
+      cropCanvas.height = Math.round(h * cropScale);
+
+      // ছবি অনুপাতে ক্রপ বক্স সেট (নিচের অর্ধেক লেখা স্বয়ংক্রিয় বাদ)
       cropBox = {
         x: 0,
         y: 0,
         w: cropCanvas.width,
-        h: cropCanvas.height * 0.52
+        h: Math.round(cropCanvas.height * 0.48) // শুধু মানুষের অংশ
       };
       drawCropView();
     }
@@ -742,37 +680,48 @@
       let h = cropCanvas.height;
 
       if (aspect === 'head') {
-        cropBox = { x: 0, y: 0, w: w, h: h * 0.52 };
+        cropBox = { x: 0, y: 0, w: w, h: Math.round(h * 0.48) };
       } else if (aspect === '1:1') {
-        let s = Math.min(w, h);
-        cropBox = { x: (w-s)/2, y: 0, w: s, h: s };
+        let s = Math.min(w, h * 0.7);
+        cropBox = { x: Math.round((w-s)/2), y: 0, w: s, h: s };
       } else if (aspect === '9:16') {
         let cw = Math.min(w, h * (9/16));
-        cropBox = { x: (w-cw)/2, y: 0, w: cw, h: cw * (16/9) };
+        cropBox = { x: Math.round((w-cw)/2), y: 0, w: cw, h: Math.round(cw * (16/9)) };
       }
       drawCropView();
     }
 
     function drawCropView() {
       cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      
+      // মূল ছবি আঁকা
       cropCtx.drawImage(originalImg, 0, 0, cropCanvas.width, cropCanvas.height);
 
+      // ক্রপ এলাকার বাইরে ডার্ক করা
       cropCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
 
+      // ক্রপ এলাকার ভেতরে পরিষ্কার রাখা
       cropCtx.clearRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
-      cropCtx.drawImage(originalImg, 
-        cropBox.x / cropCanvasScale, cropBox.y / cropCanvasScale, cropBox.w / cropCanvasScale, cropBox.h / cropCanvasScale,
+      cropCtx.drawImage(
+        originalImg,
+        cropBox.x / cropScale, cropBox.y / cropScale, cropBox.w / cropScale, cropBox.h / cropScale,
         cropBox.x, cropBox.y, cropBox.w, cropBox.h
       );
 
+      // ক্রপ বর্ডার
       cropCtx.strokeStyle = '#38bdf8';
-      cropCtx.lineWidth = 2;
+      cropCtx.lineWidth = 2.5;
       cropCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
 
+      // নিচের ডান কোণায় রিসাইজ হ্যান্ডেল
       cropCtx.fillStyle = '#38bdf8';
-      const sz = 16;
-      cropCtx.fillRect(cropBox.x + cropBox.w - sz, cropBox.y + cropBox.h - sz, sz, sz);
+      cropCtx.beginPath();
+      cropCtx.arc(cropBox.x + cropBox.w - 5, cropBox.y + cropBox.h - 5, 12, 0, Math.PI * 2);
+      cropCtx.fill();
+      cropCtx.strokeStyle = '#fff';
+      cropCtx.lineWidth = 2;
+      cropCtx.stroke();
     }
 
     cropCanvas.addEventListener('pointerdown', (e) => {
@@ -781,7 +730,10 @@
       const y = e.clientY - rect.top;
       cropTouchStart = { x, y };
 
-      if (Math.hypot(x - (cropBox.x + cropBox.w), y - (cropBox.y + cropBox.h)) < 40) {
+      const handleX = cropBox.x + cropBox.w;
+      const handleY = cropBox.y + cropBox.h;
+
+      if (Math.hypot(x - handleX, y - handleY) < 40) {
         isResizingCrop = true;
       } else if (x >= cropBox.x && x <= cropBox.x + cropBox.w && y >= cropBox.y && y <= cropBox.y + cropBox.h) {
         isDraggingCrop = true;
@@ -800,8 +752,8 @@
         cropBox.x = Math.max(0, Math.min(cropCanvas.width - cropBox.w, cropBox.x + dx));
         cropBox.y = Math.max(0, Math.min(cropCanvas.height - cropBox.h, cropBox.y + dy));
       } else if (isResizingCrop) {
-        cropBox.w = Math.max(60, Math.min(cropCanvas.width - cropBox.x, cropBox.w + dx));
-        cropBox.h = Math.max(60, Math.min(cropCanvas.height - cropBox.y, cropBox.h + dy));
+        cropBox.w = Math.max(50, Math.min(cropCanvas.width - cropBox.x, cropBox.w + dx));
+        cropBox.h = Math.max(50, Math.min(cropCanvas.height - cropBox.y, cropBox.h + dy));
       }
       cropTouchStart = { x, y };
       drawCropView();
@@ -816,10 +768,10 @@
       if (apply) {
         saveHistory();
         const offCanvas = document.createElement('canvas');
-        const sx = cropBox.x / cropCanvasScale;
-        const sy = cropBox.y / cropCanvasScale;
-        const sw = cropBox.w / cropCanvasScale;
-        const sh = cropBox.h / cropCanvasScale;
+        const sx = Math.round(cropBox.x / cropScale);
+        const sy = Math.round(cropBox.y / cropScale);
+        const sw = Math.round(cropBox.w / cropScale);
+        const sh = Math.round(cropBox.h / cropScale);
 
         offCanvas.width = sw;
         offCanvas.height = sh;
@@ -832,7 +784,7 @@
           imgBox.w = canvas.width;
           imgBox.h = (sh / sw) * canvas.width;
           imgBox.x = 0;
-          imgBox.y = 80;
+          imgBox.y = 60;
           switchTab('image');
           draw();
           saveProjectState();
@@ -842,7 +794,9 @@
       cropModal.style.display = 'none';
     }
 
-    // ৭. টাচ, মুভ এবং রিসাইজ ইঞ্জিন
+    // ==========================================
+    // টাচ, মুভ এবং রিসাইজ ইঞ্জিন
+    // ==========================================
     const canvasBox = document.getElementById('canvasBox');
     let isDragging = false;
     let isResizingText = false;
@@ -938,7 +892,6 @@
       if (hadTransformChange) saveProjectState();
     });
 
-    // ৮. ডিলিট বাটন
     function deleteImage() {
       if (!croppedImg && !originalImg) return;
       saveHistory();
@@ -949,24 +902,10 @@
       saveProjectState();
     }
 
-    function restoreOriginalImage() {
-      if (originalImg) {
-        saveHistory();
-        croppedImg = originalImg;
-        imgBox.w = canvas.width;
-        imgBox.h = (originalImg.height / originalImg.width) * canvas.width;
-        imgBox.x = 0;
-        imgBox.y = 80;
-        draw();
-        saveProjectState();
-      }
-    }
-
     const btnCompare = document.getElementById('btnCompare');
     btnCompare.addEventListener('pointerdown', () => { showBeforeComparison = true; draw(); });
     window.addEventListener('pointerup', () => { if (showBeforeComparison) { showBeforeComparison = false; draw(); } });
 
-    // টেক্সট এডিটর
     function openTextEditor() {
       document.getElementById('modalScriptInput').value = textState.rawText;
       document.getElementById('textModal').style.display = 'flex';
@@ -1008,7 +947,6 @@
       }
     }
 
-    // ৯. মূল ড্রয়িং ইঞ্জিন
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
