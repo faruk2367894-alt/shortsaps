@@ -1,0 +1,23 @@
+{
+  "name": "PixelLab Shorts Studio",
+  "short_name": "PixelLab",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090c13",
+  "theme_color": "#111622",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3670/3670151.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
