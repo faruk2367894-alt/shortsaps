@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <meta name="theme-color" content="#111622">
-  <title>PixelLab Shorts Studio Pro</title>
-  <!-- Roboto, Montserrat, Poppins, Oswald ইত্যাদি ক্লিন ফন্ট -->
+  <title>PixelLab Shorts Studio Ultra</title>
+  
+  <!-- ১০০% ডিরেক্ট PWA ম্যানিফেস্ট ইনজেকশন -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"PixelLab Shorts Studio","short_name":"PixelLab","start_url":".","display":"standalone","background_color":"#090c13","theme_color":"#111622","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3670/3670151.png","sizes":"512x512","type":"image/png"}]}'>
+
+  <!-- গুগল প্রিমিয়াম ফন্ট প্যাক (Roboto, Roboto Slab, Montserrat ইত্যাদি) -->
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;600;800;900&family=Montserrat:wght@400;600;800;900&family=Oswald:wght@600;700&family=Poppins:wght@400;600;800&family=Roboto+Condensed:wght@700&family=Roboto+Slab:wght@700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
   <style>
     * {
       box-sizing: border-box;
@@ -61,6 +66,7 @@
       border-radius: 6px;
     }
     .top-btn:active { background: #202b3d; color: #38bdf8; }
+    
     .btn-install {
       background: #0ea5e9;
       color: #fff;
@@ -85,7 +91,7 @@
       cursor: pointer;
     }
 
-    /* ২. ক্যানভাস এরিয়া */
+    /* ২. মূল ক্যানভাস ওয়ার্কস্পেস */
     .workspace {
       flex: 1;
       min-height: 0;
@@ -96,6 +102,7 @@
       overflow: hidden;
       padding: 4px;
       position: relative;
+      touch-action: none;
     }
     .canvas-container {
       height: 100%;
@@ -113,7 +120,7 @@
       touch-action: none;
     }
 
-    /* ৩. বটম প্যানেল */
+    /* ৩. বটম কন্ট্রোল প্যানেল */
     .bottom-panel {
       min-height: 96px;
       background: #121824;
@@ -217,7 +224,7 @@
       resize: none;
     }
 
-    /* ৪. ক্রপ স্টুডিও পপআপ */
+    /* ক্রপ স্টুডিও পপআপ */
     #cropModal {
       position: fixed;
       inset: 0;
@@ -293,7 +300,7 @@
         <button class="top-btn" id="btnCompare" title="Before/After Compare">👁️</button>
       </div>
       <div class="top-icons">
-        <button class="btn-install" onclick="showInstallHelp()">📲 INSTALL</button>
+        <button class="btn-install" id="pwaBtn" onclick="triggerPwaInstall()">📲 INSTALL</button>
         <button class="top-btn" onclick="downloadTransparentPNG()" title="Transparent PNG">📥 PNG</button>
         <button class="btn-export" id="renderBtn" onclick="renderMotionVideo()">🎥 EXPORT</button>
       </div>
@@ -320,7 +327,7 @@
     </div>
   </div>
 
-  <!-- টেক্সট মডাল -->
+  <!-- টেক্সট এডিটর মডাল -->
   <div class="modal-overlay" id="textModal">
     <div class="modal-card">
       <span style="font-size:11px; font-weight:bold; color:#38bdf8;">EDIT SCRIPT (CASE PRESERVED)</span>
@@ -332,111 +339,117 @@
     </div>
   </div>
 
-  <!-- কাস্টম ক্রপ স্টুডিও পপআপ -->
+  <!-- ক্রপ স্টুডিও পপআপ -->
   <div id="cropModal">
     <div class="crop-topbar">
-      <span>✂️ CROP & CUT OUT TEXT (DRAG BOX)</span>
+      <span>✂️ CROP STUDIO (LOCK & CUT)</span>
       <div style="display:flex; gap:6px;">
         <button onclick="closeCropModal(false)" style="padding:5px 10px; background:#334155; color:#fff; border:none; border-radius:4px; font-size:10px;">CANCEL</button>
-        <button onclick="closeCropModal(true)" style="padding:5px 14px; background:#22c55e; color:#000; border:none; border-radius:4px; font-weight:bold; font-size:10px;">APPLY CROP</button>
+        <button onclick="closeCropModal(true)" style="padding:5px 14px; background:#22c55e; color:#000; border:none; border-radius:4px; font-weight:bold; font-size:10px;">LOCK CROP</button>
       </div>
     </div>
     <div class="crop-workspace">
       <canvas id="cropCanvas"></canvas>
     </div>
     <div class="crop-bottombar">
-      <button class="crop-pill active" onclick="setCropAspect('free', this)">Free-Hand Box (ইচ্ছামতো)</button>
-      <button class="crop-pill" onclick="setCropAspect('head', this)">Top Half Only (নিচের টেক্সট বাদ)</button>
+      <button class="crop-pill active" onclick="setCropAspect('head', this)">Top Half (নিচের টেক্সট বাদ)</button>
+      <button class="crop-pill" onclick="setCropAspect('free', this)">Free-Hand Box</button>
       <button class="crop-pill" onclick="setCropAspect('1:1', this)">1:1 Square</button>
-      <button class="crop-pill" onclick="setCropAspect('9:16', this)">9:16 Full Shorts</button>
+      <button class="crop-pill" onclick="setCropAspect('9:16', this)">9:16 Shorts</button>
     </div>
   </div>
 
   <script>
+    // ১. সার্ভিস ওয়ার্কার ইনজেকশন (PWA ১০০% সক্রিয় করতে)
+    if ('serviceWorker' in navigator) {
+      const swCode = "self.addEventListener('fetch', (e) => {});";
+      const swBlob = new Blob([swCode], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(()=>{});
+    }
+
+    let deferredPrompt = null;
+    const pwaBtn = document.getElementById('pwaBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      pwaBtn.style.display = 'flex';
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') {
+            pwaBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("📲 সরাসরি অ্যাপ ইন্সটল করার নিয়ম:\n\n১. আপনি যদি Messenger/Facebook ব্রাউজারে থাকেন, তবে উপরে ডানপাশের থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. Chrome ব্রাউজারে সাইটটি ওপেন করে Chrome-এর থ্রি-ডট (⋮) মেনু থেকে 'Add to Home screen' বা 'Install app' দিন।");
+      }
+    }
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      pwaBtn.style.display = 'none';
+    }
+
+    // ২. ক্যানভাস এবং স্টেট সেটআপ
     const canvas = document.getElementById('shortsCanvas');
     const ctx = canvas.getContext('2d');
     let currentTab = 'text';
 
     let originalImg = null; 
-    let loadedImg = null;
+    let croppedImg = null; 
     let showBeforeComparison = false;
 
-    let imgState = {
-      x: 0, y: 0, scale: 1.0,
-      cropX: 0, cropY: 0, cropW: 0, cropH: 0,
-      mask: 'none', filter: 'hdr'
+    // স্বতন্ত্র ইমেজ বক্স স্টেট (লকড ক্রপ পর মুভ ও স্কেল হবে)
+    let imgBox = {
+      x: 0,
+      y: 80,
+      w: 1080,
+      h: 800,
+      mask: 'none',
+      filter: 'hdr'
     };
 
+    // টেক্সট বক্স স্টেট
     let textState = {
-      x: 40, y: 840, w: 1000, h: 980,
-      fontSize: 28, stroke: 10,
+      x: 40,
+      y: 920,
+      w: 1000,
+      h: 900,
+      fontSize: 28,
+      stroke: 10,
       font: "'Roboto', sans-serif",
       align: 'left',
-      caseMode: 'original', // 'original' (বড়-ছোট যেমন লিখবেন), 'upper', 'sentence'
-      colorDefault: '#FFFFFF', colorNum: '#FFEA00', colorName: '#38BDF8',
+      caseMode: 'original',
+      colorDefault: '#FFFFFF',
+      colorNum: '#FFEA00',
+      colorName: '#38BDF8',
       rawText: document.getElementById('modalScriptInput').value
     };
 
     let motionState = { type: 'zoomIn', duration: 10 };
-    let activeSelection = 'text';
+    let activeSelection = 'text'; // 'text' অথবা 'image'
 
-    // ১. অ্যাপ ইনস্টলেশন গাইড (Chrome ব্রাউজার ডিটেকশন)
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
+    // টাচ ও ড্র্যাগ ইন্টারঅ্যাকশন
+    let isDragging = false;
+    let isResizingText = false;
+    let isPinching = false;
+    let touchStartDist = 0;
+    let initialImgW = 0, initialImgH = 0;
+    let dragStartX = 0, dragStartY = 0;
 
-    function showInstallHelp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-      } else {
-        alert("📲 অ্যাপ হিসেবে ইনস্টল করার নিয়ম:\n\n১. লিংকটি মেসেঞ্জার/ফেসবুক ব্রাউজারে থাকলে উপরে থ্রি-ডট (⋮) চেপে 'Open in Chrome' দিন।\n২. ক্রোম ব্রাউজারের থ্রি-ডট (⋮) মেনু থেকে 'Add to Home screen' বা 'Install app' চাপুন।");
-      }
-    }
-
-    // ২. অটো-সেভ স্টেট
-    function saveProjectState() {
-      const stateToSave = {
-        imgState: imgState,
-        textState: textState,
-        motionState: motionState,
-        currentTab: currentTab
-      };
-      localStorage.setItem('pixelLabStudioState_v2', JSON.stringify(stateToSave));
-    }
-
-    function loadProjectState() {
-      const saved = localStorage.getItem('pixelLabStudioState_v2');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.textState) textState = Object.assign(textState, parsed.textState);
-          if (parsed.imgState) imgState = Object.assign(imgState, parsed.imgState);
-          if (parsed.motionState) motionState = Object.assign(motionState, parsed.motionState);
-          if (parsed.currentTab) currentTab = parsed.currentTab;
-          document.getElementById('modalScriptInput').value = textState.rawText;
-        } catch(e) {}
-      }
-      const savedImgData = localStorage.getItem('pixelLabSavedImg_v2');
-      if (savedImgData) {
-        const img = new Image();
-        img.onload = () => {
-          originalImg = img;
-          loadedImg = img;
-          draw();
-        };
-        img.src = savedImgData;
-      }
-    }
-
-    // ৩. সাব-টুলস মেনু (Roboto ও কাস্টম ফন্ট ও কেস সহ)
+    // ৩. সাব-টুলস রেন্ডারিং
     function renderSubTools() {
       const bar = document.getElementById('subToolsBar');
       if (currentTab === 'text') {
         bar.innerHTML = `
-          <div class="tool-item"><label>SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>FONT SIZE</label><input type="range" min="16" max="60" value="${textState.fontSize}" oninput="textState.fontSize=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>BOX WIDTH</label><input type="range" min="400" max="1060" value="${textState.w}" oninput="textState.w=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>BOX HEIGHT</label><input type="range" min="300" max="1400" value="${textState.h}" oninput="textState.h=parseInt(this.value); draw(); saveProjectState();"></div>
           <div class="tool-item"><label>OUTLINE</label><input type="range" min="0" max="25" value="${textState.stroke}" oninput="textState.stroke=parseInt(this.value); draw(); saveProjectState();"></div>
           <div class="tool-item"><label>TEXT CASE</label>
             <select onchange="textState.caseMode=this.value; draw(); saveProjectState();">
@@ -444,57 +457,50 @@
               <option value="upper" ${textState.caseMode==='upper'?'selected':''}>ALL CAPS (বড়)</option>
             </select>
           </div>
-          <div class="tool-item"><label>ALIGN</label>
-            <select onchange="textState.align=this.value; draw(); saveProjectState();">
-              <option value="left" ${textState.align==='left'?'selected':''}>Left</option>
-              <option value="center" ${textState.align==='center'?'selected':''}>Center</option>
-              <option value="right" ${textState.align==='right'?'selected':''}>Right</option>
-            </select>
-          </div>
           <div class="tool-item"><label>HIGHLIGHT</label><input type="color" value="${textState.colorNum}" onchange="textState.colorNum=this.value; draw(); saveProjectState();"></div>
         `;
       } else if (currentTab === 'image') {
         bar.innerHTML = `
-          <div class="tool-item"><label>ZOOM/SCALE</label><input type="range" min="0.2" max="4.0" step="0.05" value="${imgState.scale}" oninput="imgState.scale=parseFloat(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>MOVE X</label><input type="range" min="-800" max="800" value="${imgState.x}" oninput="imgState.x=parseInt(this.value); draw(); saveProjectState();"></div>
-          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-800" max="1000" value="${imgState.y}" oninput="imgState.y=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE X</label><input type="range" min="-600" max="600" value="${imgBox.x}" oninput="imgBox.x=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>MOVE Y</label><input type="range" min="-500" max="1200" value="${imgBox.y}" oninput="imgBox.y=parseInt(this.value); draw(); saveProjectState();"></div>
+          <div class="tool-item"><label>IMG SCALE</label><input type="range" min="300" max="2200" value="${imgBox.w}" oninput="scaleImageBox(parseInt(this.value)); draw(); saveProjectState();"></div>
         `;
       } else if (currentTab === 'crop') {
         bar.innerHTML = `
           <div class="tool-item"><label>CROP TOOL</label>
             <button onclick="openCropModal()" style="padding:4px 10px; background:#0ea5e9; color:#fff; border:none; border-radius:4px; font-size:9px; font-weight:bold;">✂️ OPEN CROP BOX</button>
           </div>
-          <div class="tool-item"><label>MASK EFFECT</label>
-            <select onchange="imgState.mask=this.value; draw(); saveProjectState();">
-              <option value="none" ${imgState.mask==='none'?'selected':''}>None</option>
-              <option value="circle" ${imgState.mask==='circle'?'selected':''}>Circle</option>
-              <option value="rounded" ${imgState.mask==='rounded'?'selected':''}>Rounded</option>
-              <option value="fadeBottom" ${imgState.mask==='fadeBottom'?'selected':''}>Fade Bottom</option>
+          <div class="tool-item"><label>MASK STYLE</label>
+            <select onchange="imgBox.mask=this.value; draw(); saveProjectState();">
+              <option value="none" ${imgBox.mask==='none'?'selected':''}>None</option>
+              <option value="circle" ${imgBox.mask==='circle'?'selected':''}>Circle</option>
+              <option value="rounded" ${imgBox.mask==='rounded'?'selected':''}>Rounded</option>
+              <option value="fadeBottom" ${imgBox.mask==='fadeBottom'?'selected':''}>Fade Bottom</option>
             </select>
           </div>
         `;
       } else if (currentTab === 'filter') {
         bar.innerHTML = `
           <div class="tool-item"><label>SMART FILTER</label>
-            <select onchange="imgState.filter=this.value; draw(); saveProjectState();">
-              <option value="hdr" ${imgState.filter==='hdr'?'selected':''}>Vibrant HDR (Auto-Enhance)</option>
-              <option value="warm" ${imgState.filter==='warm'?'selected':''}>Warm Glow</option>
-              <option value="cool" ${imgState.filter==='cool'?'selected':''}>Cool Blue</option>
-              <option value="cyber" ${imgState.filter==='cyber'?'selected':''}>Cyberpunk</option>
-              <option value="bw" ${imgState.filter==='bw'?'selected':''}>Noir B&W</option>
-              <option value="none" ${imgState.filter==='none'?'selected':''}>Original</option>
+            <select onchange="imgBox.filter=this.value; draw(); saveProjectState();">
+              <option value="hdr" ${imgBox.filter==='hdr'?'selected':''}>Vibrant HDR</option>
+              <option value="warm" ${imgBox.filter==='warm'?'selected':''}>Warm Glow</option>
+              <option value="cool" ${imgBox.filter==='cool'?'selected':''}>Cool Blue</option>
+              <option value="cyber" ${imgBox.filter==='cyber'?'selected':''}>Cyberpunk</option>
+              <option value="bw" ${imgBox.filter==='bw'?'selected':''}>Noir B&W</option>
+              <option value="none" ${imgBox.filter==='none'?'selected':''}>Original</option>
             </select>
           </div>
         `;
       } else if (currentTab === 'font') {
         bar.innerHTML = `
-          <div class="tool-item"><label>FONT SELECTION (ROBOTO & MORE)</label>
+          <div class="tool-item"><label>FONT SELECTION</label>
             <select onchange="textState.font=this.value; draw(); saveProjectState();">
-              <option value="'Roboto', sans-serif">Roboto Clean (Standard)</option>
+              <option value="'Roboto', sans-serif">Roboto (Clean)</option>
               <option value="'Roboto Slab', serif">Roboto Slab Bold</option>
               <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
               <option value="'Inter', sans-serif">Inter Pro</option>
-              <option value="'Poppins', sans-serif">Poppins Modern</option>
+              <option value="'Poppins', sans-serif">Poppins</option>
               <option value="'Montserrat', sans-serif">Montserrat</option>
               <option value="'Oswald', sans-serif">Oswald</option>
               <option value="'Anton', sans-serif">Anton Impact</option>
@@ -522,6 +528,12 @@
       }
     }
 
+    function scaleImageBox(newWidth) {
+      const ratio = imgBox.h / imgBox.w;
+      imgBox.w = newWidth;
+      imgBox.h = newWidth * ratio;
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       activeSelection = (tab === 'image' || tab === 'crop' || tab === 'filter') ? 'image' : 'text';
@@ -533,7 +545,7 @@
       saveProjectState();
     }
 
-    // ইমেজ আপলোড ও অটো-এনহ্যান্স
+    // ৪. ইমেজ আপলোড
     document.getElementById('imageInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -542,14 +554,17 @@
           const img = new Image();
           img.onload = () => {
             originalImg = img;
-            loadedImg = img;
-            imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
-            imgState.cropX = 0; imgState.cropY = 0;
-            imgState.cropW = img.width; imgState.cropH = img.height;
+            croppedImg = img; // ডিফল্টভাবে সম্পূর্ণ ছবি
+
+            imgBox.w = canvas.width;
+            imgBox.h = (img.height / img.width) * canvas.width;
+            imgBox.x = 0;
+            imgBox.y = 80;
+
             switchTab('crop');
             draw();
             saveProjectState();
-            try { localStorage.setItem('pixelLabSavedImg_v2', evt.target.result); } catch(err){}
+            openCropModal();
           };
           img.src = evt.target.result;
         };
@@ -557,12 +572,12 @@
       }
     });
 
-    // ৪. কাস্টম ক্রপ ইঞ্জিন (স্ক্রিনশটের নিচের টেক্সট বাদ দেওয়ার টুল)
+    // ৫. ক্রপ স্টুডিও ইঞ্জিন (লকড অ্যান্ড কাট)
     const cropModal = document.getElementById('cropModal');
     const cropCanvas = document.getElementById('cropCanvas');
     const cropCtx = cropCanvas.getContext('2d');
     let cropBox = { x: 0, y: 0, w: 200, h: 200 };
-    let cropRatioMode = 'free';
+    let cropRatioMode = 'head';
     let isDraggingCrop = false;
     let isResizingCrop = false;
     let cropTouchStart = { x: 0, y: 0 };
@@ -570,7 +585,7 @@
 
     function openCropModal() {
       if (!originalImg) {
-        alert("অনুগ্রহ করে ➕ বাটন চেপে একটি ছবি দিন!");
+        alert("অনুগ্রহ করে ➕ চেপে ছবি দিন!");
         return;
       }
       cropModal.style.display = 'flex';
@@ -588,12 +603,12 @@
       cropCanvas.height = h * scale;
       cropCanvasScale = scale;
 
-      // ডিফল্টভাবে উপরের অর্ধেক সিলেক্ট থাকবে যাতে নিচের লেখা বাদ যায়
+      // স্বয়ংক্রিয়ভাবে উপরের অর্ধেক অংশ সিলেক্ট করে নিচের লেখা বাদ দেওয়া
       cropBox = {
         x: 0,
         y: 0,
         w: cropCanvas.width,
-        h: cropCanvas.height * 0.55 // নিচের টেক্সট ছাড়া শুধু চেহারা
+        h: cropCanvas.height * 0.52
       };
       drawCropView();
     }
@@ -607,7 +622,6 @@
       let h = cropCanvas.height;
 
       if (aspect === 'head') {
-        // শুধু উপরের ছবি, নিচের টেক্সট স্বয়ংক্রিয় বাদ
         cropBox = { x: 0, y: 0, w: w, h: h * 0.52 };
       } else if (aspect === '1:1') {
         let s = Math.min(w, h);
@@ -623,23 +637,19 @@
       cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       cropCtx.drawImage(originalImg, 0, 0, cropCanvas.width, cropCanvas.height);
 
-      // বাইরে অন্ধকার করা
       cropCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
 
-      // ক্রপ এলাকার ভেতর একদম পরিষ্কার রাখা
       cropCtx.clearRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
       cropCtx.drawImage(originalImg, 
         cropBox.x / cropCanvasScale, cropBox.y / cropCanvasScale, cropBox.w / cropCanvasScale, cropBox.h / cropCanvasScale,
         cropBox.x, cropBox.y, cropBox.w, cropBox.h
       );
 
-      // বর্ডার
       cropCtx.strokeStyle = '#38bdf8';
       cropCtx.lineWidth = 2;
       cropCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
 
-      // কোণায় হ্যান্ডেল
       cropCtx.fillStyle = '#38bdf8';
       const sz = 16;
       cropCtx.fillRect(cropBox.x + cropBox.w - sz, cropBox.y + cropBox.h - sz, sz, sz);
@@ -684,44 +694,37 @@
 
     function closeCropModal(apply) {
       if (apply) {
-        imgState.cropX = cropBox.x / cropCanvasScale;
-        imgState.cropY = cropBox.y / cropCanvasScale;
-        imgState.cropW = cropBox.w / cropCanvasScale;
-        imgState.cropH = cropBox.h / cropCanvasScale;
-        draw();
-        saveProjectState();
+        // ক্রপ করা অংশটিকে নতুন ইমেজ হিসেবে তৈরি করে লক করা
+        const offCanvas = document.createElement('canvas');
+        const sx = cropBox.x / cropCanvasScale;
+        const sy = cropBox.y / cropCanvasScale;
+        const sw = cropBox.w / cropCanvasScale;
+        const sh = cropBox.h / cropCanvasScale;
+
+        offCanvas.width = sw;
+        offCanvas.height = sh;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(originalImg, sx, sy, sw, sh, 0, 0, sw, sh);
+
+        const newImg = new Image();
+        newImg.onload = () => {
+          croppedImg = newImg;
+          // ক্রপড ইমেজ বক্স সাইজ ও পজিশন
+          imgBox.w = canvas.width;
+          imgBox.h = (sh / sw) * canvas.width;
+          imgBox.x = 0;
+          imgBox.y = 80;
+          switchTab('image');
+          draw();
+          saveProjectState();
+        };
+        newImg.src = offCanvas.toDataURL('image/png');
       }
       cropModal.style.display = 'none';
     }
 
-    function deleteImage() {
-      loadedImg = null; originalImg = null;
-      localStorage.removeItem('pixelLabSavedImg_v2');
-      draw();
-      saveProjectState();
-    }
-
-    function restoreOriginalImage() {
-      if (originalImg) {
-        loadedImg = originalImg;
-        imgState.x = 0; imgState.y = 0; imgState.scale = 1.0;
-        imgState.cropX = 0; imgState.cropY = 0;
-        imgState.cropW = originalImg.width; imgState.cropH = originalImg.height;
-        imgState.mask = 'none'; imgState.filter = 'hdr';
-        draw();
-        saveProjectState();
-      }
-    }
-
-    const btnCompare = document.getElementById('btnCompare');
-    btnCompare.addEventListener('pointerdown', () => { showBeforeComparison = true; draw(); });
-    window.addEventListener('pointerup', () => { if (showBeforeComparison) { showBeforeComparison = false; draw(); } });
-
-    // টাচ ও পিঞ্চ জুম
+    // ৬. টাচ, মুভ এবং টেক্সট বক্স রিসাইজ ইঞ্জিন (Touch Gesture Logic)
     const canvasBox = document.getElementById('canvasBox');
-    let isInteracting = false, isPinching = false;
-    let touchStartDist = 0, initialScale = 1.0;
-    let dragStartX = 0, dragStartY = 0;
 
     function getCoords(e) {
       const rect = canvas.getBoundingClientRect();
@@ -735,40 +738,100 @@
 
     canvasBox.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
+        // দুই আঙুলে ইমেজ পিঞ্চ জুম
         isPinching = true;
         touchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        initialScale = imgState.scale;
+        initialImgW = imgBox.w;
+        initialImgH = imgBox.h;
       } else if (e.touches.length === 1) {
         const p = getCoords(e);
-        dragStartX = p.x; dragStartY = p.y;
-        isInteracting = true;
+        dragStartX = p.x;
+        dragStartY = p.y;
+
+        // টেক্সট বক্সের ডান কোণায় রিসাইজ হ্যান্ডেল পয়েন্ট চেক
+        const handleX = textState.x + textState.w;
+        const handleY = textState.y + textState.h;
+        if (Math.hypot(p.x - handleX, p.y - handleY) < 60) {
+          isResizingText = true;
+          activeSelection = 'text';
+        } else if (p.x >= textState.x && p.x <= textState.x + textState.w && p.y >= textState.y && p.y <= textState.y + textState.h) {
+          isDragging = true;
+          activeSelection = 'text';
+        } else if (croppedImg && p.x >= imgBox.x && p.x <= imgBox.x + imgBox.w && p.y >= imgBox.y && p.y <= imgBox.y + imgBox.h) {
+          isDragging = true;
+          activeSelection = 'image';
+        }
+        draw();
       }
     }, { passive: false });
 
     window.addEventListener('touchmove', (e) => {
       if (isPinching && e.touches.length === 2) {
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        imgState.scale = Math.max(0.2, Math.min(4.0, initialScale * (dist / touchStartDist)));
+        const scale = dist / touchStartDist;
+        imgBox.w = Math.max(200, Math.min(3000, initialImgW * scale));
+        imgBox.h = Math.max(150, Math.min(3000, initialImgH * scale));
         draw();
         e.preventDefault();
-      } else if (isInteracting && e.touches.length === 1) {
+      } else if (isResizingText && e.touches.length === 1) {
+        // টেক্সট বক্স রিসাইজ (Smooth Pull)
+        const p = getCoords(e);
+        textState.w = Math.max(300, Math.min(1060, p.x - textState.x));
+        textState.h = Math.max(200, Math.min(1500, p.y - textState.y));
+        draw();
+        e.preventDefault();
+      } else if (isDragging && e.touches.length === 1) {
         const p = getCoords(e);
         const dx = p.x - dragStartX;
         const dy = p.y - dragStartY;
-        if (activeSelection === 'text') { textState.x += dx; textState.y += dy; }
-        else { imgState.x += dx; imgState.y += dy; }
-        dragStartX = p.x; dragStartY = p.y;
+
+        if (activeSelection === 'text') {
+          textState.x += dx;
+          textState.y += dy;
+        } else if (activeSelection === 'image') {
+          imgBox.x += dx;
+          imgBox.y += dy;
+        }
+
+        dragStartX = p.x;
+        dragStartY = p.y;
         draw();
         e.preventDefault();
       }
     }, { passive: false });
 
     window.addEventListener('touchend', () => {
-      if (isInteracting || isPinching) saveProjectState();
-      isInteracting = false;
+      isDragging = false;
+      isResizingText = false;
       isPinching = false;
+      saveProjectState();
     });
 
+    // ডিলিট ও রিস্টোর
+    function deleteImage() {
+      croppedImg = null;
+      originalImg = null;
+      draw();
+      saveProjectState();
+    }
+
+    function restoreOriginalImage() {
+      if (originalImg) {
+        croppedImg = originalImg;
+        imgBox.w = canvas.width;
+        imgBox.h = (originalImg.height / originalImg.width) * canvas.width;
+        imgBox.x = 0;
+        imgBox.y = 80;
+        draw();
+        saveProjectState();
+      }
+    }
+
+    const btnCompare = document.getElementById('btnCompare');
+    btnCompare.addEventListener('pointerdown', () => { showBeforeComparison = true; draw(); });
+    window.addEventListener('pointerup', () => { if (showBeforeComparison) { showBeforeComparison = false; draw(); } });
+
+    // টেক্সট এডিটর
     function openTextEditor() {
       document.getElementById('modalScriptInput').value = textState.rawText;
       document.getElementById('textModal').style.display = 'flex';
@@ -782,7 +845,7 @@
       document.getElementById('textModal').style.display = 'none';
     }
 
-    // স্মার্ট কালার ও কেস পার্সিং
+    // কালার ও ওয়ার্ড পার্সিং
     function parseStoryWords(text) {
       let cleanText = text;
       if (textState.caseMode === 'upper') cleanText = text.toUpperCase();
@@ -800,7 +863,7 @@
 
     function getFilterCSS() {
       if (showBeforeComparison) return 'none';
-      switch (imgState.filter) {
+      switch (imgBox.filter) {
         case 'hdr': return 'contrast(135%) saturate(145%) brightness(106%)';
         case 'warm': return 'sepia(25%) saturate(135%) contrast(115%)';
         case 'cool': return 'hue-rotate(185deg) contrast(120%) saturate(120%)';
@@ -810,41 +873,50 @@
       }
     }
 
+    // ৭. ক্যানভাস রেন্ডারিং
     function draw(scaleMotion = 1.0, motionOffsetY = 0, renderUI = true) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ১. ক্রপ করা ইমেজ আল্ট্রা ক্লিয়ারিটি সহ আঁকা
-      if (loadedImg) {
+      // ১. লকড ক্রপড ইমেজ ড্রয়িং (PixelLab Image Box)
+      if (croppedImg) {
         ctx.save();
-        if (imgState.mask === 'circle') {
+        if (imgBox.mask === 'circle') {
           ctx.beginPath();
-          ctx.arc(canvas.width / 2, 450, 380, 0, Math.PI * 2);
+          ctx.arc(imgBox.x + imgBox.w/2, imgBox.y + imgBox.h/2, Math.min(imgBox.w, imgBox.h)/2, 0, Math.PI * 2);
           ctx.clip();
-        } else if (imgState.mask === 'rounded') {
+        } else if (imgBox.mask === 'rounded') {
           ctx.beginPath();
-          ctx.roundRect(50, 60, canvas.width - 100, 800, 40);
+          ctx.roundRect(imgBox.x, imgBox.y, imgBox.w, imgBox.h, 40);
           ctx.clip();
         }
 
         ctx.filter = getFilterCSS();
-        let sx = imgState.cropX, sy = imgState.cropY;
-        let sw = imgState.cropW, sh = imgState.cropH;
-        let dw = canvas.width * imgState.scale * scaleMotion;
-        let dh = (sh / sw) * dw;
-        let dx = (canvas.width - dw) / 2 + imgState.x;
-        let dy = imgState.y + motionOffsetY;
 
-        ctx.drawImage(loadedImg, sx, sy, sw, sh, dx, dy, dw, dh);
+        let dw = imgBox.w * scaleMotion;
+        let dh = imgBox.h * scaleMotion;
+        let dx = imgBox.x - ((dw - imgBox.w) / 2);
+        let dy = imgBox.y + motionOffsetY;
+
+        ctx.drawImage(croppedImg, dx, dy, dw, dh);
         ctx.restore();
 
-        if (imgState.mask === 'fadeBottom') {
-          let fade = ctx.createLinearGradient(0, 0, 0, canvas.height);
-          fade.addColorStop(0, 'rgba(0,0,0,0.15)');
-          fade.addColorStop(0.45, 'rgba(0,0,0,0.02)');
-          fade.addColorStop(0.68, 'rgba(9,12,19,0.85)');
+        if (imgBox.mask === 'fadeBottom') {
+          let fade = ctx.createLinearGradient(0, imgBox.y, 0, imgBox.y + imgBox.h);
+          fade.addColorStop(0, 'rgba(0,0,0,0)');
+          fade.addColorStop(0.5, 'rgba(0,0,0,0.05)');
+          fade.addColorStop(0.85, 'rgba(9,12,19,0.9)');
           fade.addColorStop(1, 'rgba(9,12,19,1)');
           ctx.fillStyle = fade;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillRect(imgBox.x, imgBox.y, imgBox.w, imgBox.h);
+        }
+
+        // ইমেজ সিলেকশন বর্ডার
+        if (renderUI && activeSelection === 'image') {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([10, 8]);
+          ctx.strokeRect(imgBox.x, imgBox.y, imgBox.w, imgBox.h);
+          ctx.setLineDash([]);
         }
       }
 
@@ -857,7 +929,7 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // ৩. টেক্সট ড্রয়িং (বড়-ছোট অক্ষরের সাপোর্ট সহ)
+      // ৩. টাইপোগ্রাফি
       const fSize = textState.fontSize;
       const sWidth = textState.stroke;
       const words = parseStoryWords(textState.rawText);
@@ -911,12 +983,47 @@
       });
       ctx.shadowBlur = 0;
 
+      // ৪. টেক্সট বক্স সিলেকশন ও রিসাইজ বাটন
       if (renderUI && activeSelection === 'text') {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2;
         ctx.setLineDash([8, 6]);
         ctx.strokeRect(textState.x - 4, textState.y - 4, textState.w + 8, textState.h + 8);
         ctx.setLineDash([]);
+
+        // নিচের ডান কোণায় রিসাইজ হ্যান্ডেল আইকন
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(textState.x + textState.w, textState.y + textState.h, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    }
+
+    // অটো-সেভ স্টেট
+    function saveProjectState() {
+      const stateToSave = {
+        imgBox: imgBox,
+        textState: textState,
+        motionState: motionState,
+        currentTab: currentTab
+      };
+      localStorage.setItem('pixelLabUltra_vFinal', JSON.stringify(stateToSave));
+    }
+
+    function loadProjectState() {
+      const saved = localStorage.getItem('pixelLabUltra_vFinal');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.textState) textState = Object.assign(textState, parsed.textState);
+          if (parsed.imgBox) imgBox = Object.assign(imgBox, parsed.imgBox);
+          if (parsed.motionState) motionState = Object.assign(motionState, parsed.motionState);
+          if (parsed.currentTab) currentTab = parsed.currentTab;
+          document.getElementById('modalScriptInput').value = textState.rawText;
+        } catch(e) {}
       }
     }
 
@@ -930,7 +1037,7 @@
     }
 
     async function renderMotionVideo() {
-      if (!loadedImg) {
+      if (!croppedImg) {
         alert("অনুগ্রহ করে ➕ চেপে ছবি দিন!");
         return;
       }
